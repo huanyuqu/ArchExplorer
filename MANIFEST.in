@@ -1,5 +1,7 @@
 include README.md LICENSE NOTICE pyproject.toml requirements.txt .gitignore
 include EXPORT_MANIFEST.json
+include CITATION.cff CITATION.bib
+include docs/assets/archexplorer-logo.png
 recursive-include .github *.yml
 recursive-include arch_explorer *.py
 recursive-include arch_explorer/components *.hpp *.h *.cc *.cpp *.patch *.md *.json NOTICE

@@ -7,7 +7,8 @@ import json
 from pathlib import Path
 import shutil
 
-FILES = ("README.md", "LICENSE", "NOTICE", "pyproject.toml", "requirements.txt", "MANIFEST.in", ".gitignore")
+FILES = ("README.md", "LICENSE", "NOTICE", "pyproject.toml", "requirements.txt", "MANIFEST.in", ".gitignore",
+         "CITATION.cff", "CITATION.bib", "docs/assets/archexplorer-logo.png")
 TREES = {"arch_explorer": {".py"}, "docs": {".md"}, "examples": {".json"},
          "tests": {".py"}, "tools": {".py"}, ".github": {".yml"}, "skills": {".md"}}
 EXAMPLE_TREES = {

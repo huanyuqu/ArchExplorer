@@ -1,17 +1,39 @@
-# ArchExplorer
+<p align="center">
+  <img src="docs/assets/archexplorer-logo.png" alt="ArchExplorer logo: connected hardware blocks inside an A" width="160">
+</p>
 
-**Experimental research software — version 0.2.0.** Build candidate hardware
-architectures, map workloads onto them, and compare simulated performance.
-Start with the CPU-only synthetic example below; it needs no GPU or external
-simulator.
+<h1 align="center">ArchExplorer</h1>
 
-ArchExplorer explores architecture structure, hardware parameters and workload
-mappings through a shared ADF representation. Workload semantics, mapping,
-hardware components and simulation generation have separate responsibilities.
-`simulator` generates and schedules execution through public protocols;
-`components` organizes concrete mechanisms by hardware responsibility, with
-separate execution implementations and external engine providers, including
-Accel-Sim. Installed extensions use the same registration path as built-ins.
+<p align="center">
+  <strong>Automated architecture discovery through unified cross-architecture evaluation</strong>
+</p>
+
+<p align="center">
+  <a href="https://arxiv.org/abs/2503.21297">arXiv paper</a> ·
+  <a href="#citation">Citation</a> ·
+  <a href="docs/tutorials/01-quickstart.md">Tutorial</a>
+</p>
+
+ArchExplorer is an open-source framework for exploring accelerator architectures.
+It brings architecture structure, hardware parameters and workload mappings into
+one workflow, so designs with different compute, memory and interconnect
+organizations can be evaluated through shared interfaces.
+
+- **Compose multi-level hardware.** Describe components and their hierarchy in
+  an architecture description file (ADF), from individual compute and memory
+  units to larger interconnected systems.
+- **Generate and evaluate execution.** Map workload task graphs onto the hardware
+  model and use component evaluators and discrete-event scheduling to model
+  computation, data movement and resource contention.
+- **Explore three design levels together.** Apply structure transformations,
+  tune hardware parameters and search workload mappings under explicit budgets.
+- **Extend the same workflow.** Register component models, operator mappings or
+  simulator providers, including external engines such as Accel-Sim, through
+  the public extension interfaces.
+
+**Experimental research software — version 0.2.0.** Start with the CPU-only
+synthetic example below; it needs no GPU or external simulator. For the research
+background, see our [MLDSE paper](https://arxiv.org/abs/2503.21297).
 
 ## Install
 
@@ -131,7 +153,7 @@ and [component inventory](docs/component-inventory.md).
 
 ## Native GPU program demo
 
-The [ViT/CLIP tutorial (Chinese)](docs/tutorials/05-full-models.md) follows a complete
+The [ViT/CLIP tutorial](docs/tutorials/05-full-models.md) follows a complete
 small forward workload through an ADF, two mappings, program preparation,
 capability checks and native Accel-Sim execution. The frontend requires the
 complete-program backend and an explicit external engine manifest. Missing
@@ -189,6 +211,26 @@ The [independent workload package](examples/extensions/workload_components/READM
 needs no core operator/model list edits and supplies no replacement provider.
 See [user skills](docs/agent-skills.md) for agent workflows that consume these
 public interfaces and tutorials.
+
+## Citation
+
+If you use ArchExplorer in your research, please cite our arXiv paper:
+[MLDSE: Scaling Design Space Exploration Infrastructure for Multi-Level Hardware](https://arxiv.org/abs/2503.21297).
+
+```bibtex
+@misc{qu2025mldse,
+  title={MLDSE: Scaling Design Space Exploration Infrastructure for Multi-Level Hardware},
+  author={Huanyu Qu and Weihao Zhang and Junfeng Lin and Songchen Ma and Hongyi Li and Luping Shi and Chengzhong Xu},
+  year={2025},
+  eprint={2503.21297},
+  archivePrefix={arXiv},
+  primaryClass={cs.AR},
+  url={https://arxiv.org/abs/2503.21297},
+}
+```
+
+The same entry is available in [CITATION.bib](CITATION.bib). GitHub's
+**Cite this repository** menu uses [CITATION.cff](CITATION.cff) to point to this paper.
 
 ## Development and source export
 

@@ -1,0 +1,47 @@
+cff-version: 1.2.0
+message: "If you use ArchExplorer in your research, please cite our MLDSE arXiv paper below."
+type: software
+title: ArchExplorer
+version: 0.2.0
+license: Apache-2.0
+url: "https://github.com/huanyuqu/ArchExplorer"
+repository-code: "https://github.com/huanyuqu/ArchExplorer"
+authors:
+  - family-names: Qu
+    given-names: Huanyu
+  - family-names: Zhang
+    given-names: Weihao
+  - family-names: Lin
+    given-names: Junfeng
+  - family-names: Ma
+    given-names: Songchen
+  - family-names: Li
+    given-names: Hongyi
+  - family-names: Shi
+    given-names: Luping
+  - family-names: Xu
+    given-names: Chengzhong
+preferred-citation:
+  type: generic
+  title: "MLDSE: Scaling Design Space Exploration Infrastructure for Multi-Level Hardware"
+  authors:
+    - family-names: Qu
+      given-names: Huanyu
+    - family-names: Zhang
+      given-names: Weihao
+    - family-names: Lin
+      given-names: Junfeng
+    - family-names: Ma
+      given-names: Songchen
+    - family-names: Li
+      given-names: Hongyi
+    - family-names: Shi
+      given-names: Luping
+    - family-names: Xu
+      given-names: Chengzhong
+  year: 2025
+  url: "https://arxiv.org/abs/2503.21297"
+  identifiers:
+    - type: other
+      value: "arXiv:2503.21297"
+      description: "arXiv preprint (cs.AR)"
