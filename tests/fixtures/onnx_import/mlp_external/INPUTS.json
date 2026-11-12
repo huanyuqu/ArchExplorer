@@ -1,0 +1,77 @@
+{
+  "schema": "arch-explorer.val62.independent-input.v1",
+  "case": "mlp",
+  "opset": 17,
+  "IR": 8,
+  "model": {
+    "path": "model.onnx",
+    "sha256": "851b24d7f71f4927f3f45f58b9cb460bf1e94e4115713d4e8a49337fefa13626",
+    "bytes": 676
+  },
+  "external_data": {
+    "weights/data.bin": {
+      "sha256": "af8c769bf3c3f26e03b710d4b0e790e77c7ae1d5c3c4c21b2e0ca85d81fc90ca",
+      "bytes": 67,
+      "offset": 16,
+      "length": 48
+    }
+  },
+  "feeds": {
+    "X": {
+      "dtype": "float32",
+      "shape": [
+        2,
+        3
+      ],
+      "values": [
+        [
+          1.0,
+          -2.0,
+          0.5
+        ],
+        [
+          -0.25,
+          0.75,
+          2.0
+        ]
+      ]
+    }
+  },
+  "outputs": [
+    "Y",
+    "shared"
+  ],
+  "initializers": [
+    {
+      "name": "W1",
+      "dtype": 1,
+      "shape": [
+        4,
+        3
+      ]
+    },
+    {
+      "name": "b1",
+      "dtype": 1,
+      "shape": [
+        4
+      ]
+    },
+    {
+      "name": "W2",
+      "dtype": 1,
+      "shape": [
+        4,
+        2
+      ]
+    },
+    {
+      "name": "b2",
+      "dtype": 1,
+      "shape": [
+        2
+      ]
+    }
+  ],
+  "contains_expected_answers": false
+}

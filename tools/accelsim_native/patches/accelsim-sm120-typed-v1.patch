@@ -1,0 +1,259 @@
+diff --git a/gpu-simulator/ISA_Def/sm120_mechanism_opcode.h b/gpu-simulator/ISA_Def/sm120_mechanism_opcode.h
+new file mode 100644
+index 0000000..756d3b2
+--- /dev/null
++++ b/gpu-simulator/ISA_Def/sm120_mechanism_opcode.h
+@@ -0,0 +1,37 @@
++// SIM28 mechanism-only ordinary subset. See tools/accelsim_native/README.md.
++#ifndef ARCH_EXPLORER_SM120_MAP_H
++#define ARCH_EXPLORER_SM120_MAP_H
++#include "trace_opcode.h"
++static const std::unordered_map<std::string,OpcodeChar> SM120_Mechanism_OpcodeMap = {
++  {"LDC",OpcodeChar(OP_LDC,LOAD_OP)},
++  {"ULDC",OpcodeChar(OP_ULDC,LOAD_OP)},
++  {"LDCU",OpcodeChar(OP_ULDC,LOAD_OP)},
++  {"S2UR",OpcodeChar(OP_S2UR,SPECIALIZED_UNIT_4_OP)},
++  {"LDG",OpcodeChar(OP_LDG,LOAD_OP)},
++  {"STG",OpcodeChar(OP_STG,STORE_OP)},
++  {"MOV",OpcodeChar(OP_MOV,ALU_OP)},
++  {"MOV32I",OpcodeChar(OP_MOV32I,ALU_OP)},
++  {"S2R",OpcodeChar(OP_S2R,ALU_OP)},
++  {"CS2R",OpcodeChar(OP_CS2R,ALU_OP)},
++  {"IMAD",OpcodeChar(OP_IMAD,INTP_OP)},
++  {"IADD",OpcodeChar(OP_IADD,INTP_OP)},
++  {"IADD3",OpcodeChar(OP_IADD3,INTP_OP)},
++  {"LEA",OpcodeChar(OP_LEA,INTP_OP)},
++  {"LOP3",OpcodeChar(OP_LOP3,INTP_OP)},
++  {"SHF",OpcodeChar(OP_SHF,INTP_OP)},
++  {"ISETP",OpcodeChar(OP_ISETP,INTP_OP)},
++  {"PLOP3",OpcodeChar(OP_PLOP3,ALU_OP)},
++  {"UMOV",OpcodeChar(OP_UMOV,SPECIALIZED_UNIT_4_OP)},
++  {"UIADD3",OpcodeChar(OP_UIADD3,SPECIALIZED_UNIT_4_OP)},
++  {"UIMAD",OpcodeChar(OP_UIMAD,SPECIALIZED_UNIT_4_OP)},
++  {"UISETP",OpcodeChar(OP_UISETP,SPECIALIZED_UNIT_4_OP)},
++  {"ULEA",OpcodeChar(OP_ULEA,SPECIALIZED_UNIT_4_OP)},
++  {"ULOP3",OpcodeChar(OP_ULOP3,SPECIALIZED_UNIT_4_OP)},
++  {"UPLOP3",OpcodeChar(OP_UPLOP3,SPECIALIZED_UNIT_4_OP)},
++  {"R2UR",OpcodeChar(OP_R2UR,SPECIALIZED_UNIT_4_OP)},
++  {"BRA",OpcodeChar(OP_BRA,BRANCH_OP)},
++  {"UBRA",OpcodeChar(OP_BRA,BRANCH_OP)},
++  {"EXIT",OpcodeChar(OP_EXIT,EXIT_OPS)},
++  {"NOP",OpcodeChar(OP_NOP,ALU_OP)},
++};
++#endif
+diff --git a/gpu-simulator/trace-driven/trace_driven.cc b/gpu-simulator/trace-driven/trace_driven.cc
+index 4b070ed..c923b7e 100644
+--- a/gpu-simulator/trace-driven/trace_driven.cc
++++ b/gpu-simulator/trace-driven/trace_driven.cc
+@@ -1,3 +1,5 @@
++#include <stdexcept>
++#include <set>
+ // Copyright (c) 2018-2021, Mahmoud Khairy, Vijay Kandiah, Timothy Rogers, Tor
+ // M. Aamodt, Nikos Hardavellas
+ // Northwestern University, Purdue University, The University of British
+@@ -43,6 +45,7 @@
+ #include "../ISA_Def/accelwattch_component_mapping.h"
+ #include "../ISA_Def/ampere_opcode.h"
+ #include "../ISA_Def/hopper_opcode.h"
++#include "../ISA_Def/sm120_mechanism_opcode.h"
+ #include "../ISA_Def/kepler_opcode.h"
+ #include "../ISA_Def/pascal_opcode.h"
+ #include "../ISA_Def/trace_opcode.h"
+@@ -196,7 +199,12 @@ trace_kernel_info_t::trace_kernel_info_t(dim3 gridDim, dim3 blockDim,
+   m_was_launched = false;
+ 
+   // resolve the binary version
+-  if (kernel_trace_info->binary_verion == HOPPER_H100_BINART_VERSION)
++  if (kernel_trace_info->binary_verion == 120) {
++    if(kernel_trace_info->trace_verion!=7) throw std::runtime_error("SM120 requires typed trace version 7");
++    OpcodeMap=&SM120_Mechanism_OpcodeMap;
++    printf("ARCH_EXPLORER_SM120_TYPED_V1: synthetic banks; physical profile unvalidated\n");
++  }
++  else if (kernel_trace_info->binary_verion == HOPPER_H100_BINART_VERSION)
+     OpcodeMap = &Hopper_OpcodeMap;
+   else if (kernel_trace_info->binary_verion == AMPERE_RTX_BINART_VERSION ||
+            kernel_trace_info->binary_verion == AMPERE_A100_BINART_VERSION)
+@@ -295,6 +303,14 @@ bool trace_warp_inst_t::parse_from_trace_struct(
+   const std::string &opcode1 = opcode_tokens[0];
+   const std::string &opcode = trace.opcode;
+ 
++  if(trace.sim28_typed) {
++    static const std::set<std::string> suffixes = {"E","U8","S8","U16","S16","U32","S32","32","64","128","CONSTANT","BYPASS",
++      "MOV","WIDE","LO","HI","X","AND","OR","XOR","NOT","LUT","R","L","SHL","SHR","ADD","EQ","NE","LT","LE","GT","GE","U64","S64"};
++    for(unsigned i=1;i<opcode_tokens.size();i++)
++      if(!suffixes.count(opcode_tokens[i])) throw std::runtime_error("SIM28 unknown opcode modifier/ordering");
++    if((opcode1=="LDG" || opcode1=="STG" || opcode1=="LDC" || opcode1=="ULDC" || opcode1=="LDCU") && !trace.memadd_info)
++      throw std::runtime_error("SIM28 missing effective addresses");
++  }
+   // Set instruction operand type based on the opcode for all instructions
+   std::unordered_map<std::string, OpcodeChar>::const_iterator it =
+       OpcodeMap->find(opcode1);
+@@ -322,6 +338,8 @@ bool trace_warp_inst_t::parse_from_trace_struct(
+   outcount = trace.reg_dsts_num;
+   // For now, we only model regular registers usage
+   auto convert_reg_num = [&](const trace_reg_t &reg) -> uint32_t {
++    if (trace.sim28_typed)
++      return sim28_encode((unsigned)reg.type,reg.num);
+     if (reg.type == REG)
+       return reg.num + 1;  // Increment by one because GPGPU-sim starts
+                            // from R1, while SASS starts from R0
+@@ -330,15 +348,37 @@ bool trace_warp_inst_t::parse_from_trace_struct(
+   };
+   for (unsigned m = 0; m < trace.reg_dsts_num; ++m) {
+     out[m] = convert_reg_num(trace.reg_dest[m]);
+-    arch_reg.dst[m] = convert_reg_num(trace.reg_dest[m]);
++    arch_reg.dst[m] = out[m] ? out[m] : -1;
+   }
+ 
+   incount = trace.reg_srcs_num;
+   for (unsigned m = 0; m < trace.reg_srcs_num; ++m) {
+     in[m] = convert_reg_num(trace.reg_src[m]);
+-    arch_reg.src[m] = convert_reg_num(trace.reg_src[m]);
++    arch_reg.src[m] = in[m] ? in[m] : -1;
+   }
+ 
++  if(trace.sim28_typed) {
++    if(!(m_config->gpgpu_coalesce_arch==120)) throw std::runtime_error("SIM28 typed bank config required");
++    std::set<unsigned> dsts,srcs;
++    unsigned n=0;
++    for(unsigned r=0;r<outcount;r++) if(out[r] && trace.mask && dsts.insert(out[r]).second) out[n++]=out[r];
++    outcount=n;for(unsigned r=n;r<MAX_OUTPUT_VALUES;r++) out[r]=0;
++    for(unsigned r=0;r<MAX_REG_OPERANDS;r++) arch_reg.dst[r]=r<n?(int)out[r]:-1;
++    n=0;
++    for(unsigned r=0;r<incount;r++) if(in[r] && srcs.insert(in[r]).second) in[n++]=in[r];
++    if(!trace.mask) n=0; // predicated-off instruction reads only its guard
++    pred=sim28_encode((unsigned)trace.sim28_guard.type,trace.sim28_guard.num);
++    sim28_predicate_lanes=std::bitset<32>(trace.sim28_active).count();
++    bool found=false;
++    for(unsigned r=0;r<n;r++) found|=in[r]==(unsigned)pred;
++    if(pred && !found) {
++      if(n==MAX_INPUT_VALUES) throw std::runtime_error("SIM28 predicate input capacity exceeded");
++      in[n++]=pred;
++    }
++    incount=n;for(unsigned r=n;r<MAX_INPUT_VALUES;r++) in[r]=0;
++    for(unsigned r=0;r<MAX_REG_OPERANDS;r++) arch_reg.src[r]=r<n?(int)in[r]:-1;
++    num_regs=outcount+incount;num_operands=num_regs;
++  }
+   // fill latency and initl
+   tconfig->set_latency(op, latency, initiation_interval);
+ 
+@@ -374,8 +414,9 @@ bool trace_warp_inst_t::parse_from_trace_struct(
+ 
+   // handle special cases and fill memory space
+   switch (m_opcode) {
++    case OP_ULDC:
+     case OP_LDC:  // handle Load from Constant
+-      data_size = 4;
++      data_size = trace.sim28_typed ? data_size : 4;
+       memory_op = memory_load;
+       const_cache_operand = 1;
+       space.set_type(const_space);
+diff --git a/gpu-simulator/trace-parser/trace_parser.cc b/gpu-simulator/trace-parser/trace_parser.cc
+index 316da18..c723815 100644
+--- a/gpu-simulator/trace-parser/trace_parser.cc
++++ b/gpu-simulator/trace-parser/trace_parser.cc
+@@ -1,3 +1,5 @@
++#include <stdexcept>
++#include <set>
+ // developed by Mahmoud Khairy, Purdue Univ
+ // abdallm@purdue.edu
+ 
+@@ -63,10 +65,10 @@ unsigned inst_trace_t::get_datawidth_from_opcode(
+   for (unsigned i = 0; i < opcode.size(); ++i) {
+     if (is_number(opcode[i])) {
+       return (std::stoi(opcode[i], NULL) / 8);
+-    } else if (opcode[i][0] == 'U' && is_number(opcode[i].substr(1))) {
++    } else if ((opcode[i][0] == 'U' || opcode[i][0] == 'S') && is_number(opcode[i].substr(1))) {
+       // handle the U* case
+       unsigned bits;
+-      sscanf(opcode[i].c_str(), "U%u", &bits);
++      bits = std::stoul(opcode[i].substr(1));
+       return bits / 8;
+     }
+   }
+@@ -180,6 +182,7 @@ bool inst_trace_t::parse_from_string(std::string trace, unsigned trace_version,
+     ss >> std::dec >> line_num;
+   }
+ 
++  sim28_typed = trace_version==7;
+   ss >> std::hex >> m_pc;
+   ss >> std::hex >> mask;
+ 
+@@ -199,7 +202,13 @@ bool inst_trace_t::parse_from_string(std::string trace, unsigned trace_version,
+       reg.type = UPRED;
+     else if (reg_str.find("P") != std::string::npos)
+       reg.type = PRED;
+-    reg.num = std::stoi(reg_str.substr(reg_str.find_first_not_of("RURPUP")));
++    if(sim28_typed && (reg_str=="RZ" || reg_str=="URZ" || reg_str=="PT" || reg_str=="UPT")) {
++      reg.num=(reg.type==REG || reg.type==UREG)?255:7;
++    } else {
++      reg.num=std::stoi(reg_str.substr(reg_str.find_first_not_of("RURPUP")));
++    }
++    if(sim28_typed && reg.num >= (reg.type==REG || reg.type==UREG ? 256u:8u))
++      throw std::runtime_error("SIM28 register index out of range");
+   };
+   for (unsigned i = 0; i < reg_dsts_num; ++i) {
+     parse_trace_reg_num(reg_dest[i]);
+@@ -282,6 +291,15 @@ bool inst_trace_t::parse_from_string(std::string trace, unsigned trace_version,
+     // read the memory width from the opcode, as nvbit can report it incorrectly
+     std::vector<std::string> opcode_tokens = get_opcode_tokens();
+     memadd_info->width = get_datawidth_from_opcode(opcode_tokens);
++    if(sim28_typed) {
++      if(mem_width!=1 && mem_width!=2 && mem_width!=4 && mem_width!=8 && mem_width!=16)
++        throw std::runtime_error("SIM28 invalid memory width");
++      if(opcode_tokens[0]=="LDG" || opcode_tokens[0]=="STG") {
++        if(memadd_info->width!=mem_width) throw std::runtime_error("SIM28 dynamic/opcode width mismatch");
++      } else if(opcode_tokens[0]!="LDC" && opcode_tokens[0]!="ULDC" && opcode_tokens[0]!="LDCU")
++        throw std::runtime_error("SIM28 unsupported memory operation");
++      memadd_info->width=mem_width;
++    }
+ 
+     ss >> std::dec >> address_mode;
+     if (address_mode == address_format::list_all) {
+@@ -378,8 +396,19 @@ bool inst_trace_t::parse_from_string(std::string trace, unsigned trace_version,
+     }
+   }
+ 
+-  // Finish Parsing
+-
++  if(sim28_typed) {
++    std::string guard;
++    ss>>guard;
++    if(guard!="Guard") throw std::runtime_error("SIM28 explicit predicate control required");
++    parse_trace_reg_num(sim28_guard);
++    if(sim28_guard.type!=PRED && sim28_guard.type!=UPRED)
++      throw std::runtime_error("SIM28 control must be P/UP or true constant");
++    std::string active_tag;ss>>active_tag>>std::hex>>sim28_active;
++    if(active_tag!="Active" || !sim28_active || (mask & ~sim28_active))
++      throw std::runtime_error("SIM28 observed pre-predicate mask required");
++    if(ss.fail()) throw std::runtime_error("SIM28 incomplete instruction");
++    std::string extra;if(ss>>extra) throw std::runtime_error("SIM28 trailing instruction fields");
++  }
+   return true;
+ }
+ 
+diff --git a/gpu-simulator/trace-parser/trace_parser.h b/gpu-simulator/trace-parser/trace_parser.h
+index 7e76064..33d7dfa 100644
+--- a/gpu-simulator/trace-parser/trace_parser.h
++++ b/gpu-simulator/trace-parser/trace_parser.h
+@@ -14,8 +14,8 @@
+ #include <vector>
+ 
+ #define WARP_SIZE 32
+-#define MAX_DST 1
+-#define MAX_SRC 4
++#define MAX_DST 8
++#define MAX_SRC 24
+ 
+ enum command_type {
+   kernel_launch = 1,
+@@ -92,6 +92,9 @@ struct inst_trace_t {
+   unsigned line_num;
+   unsigned m_pc;
+   unsigned mask;
++  bool sim28_typed = false;
++  trace_reg_t sim28_guard{7,PRED};
++  unsigned sim28_active = 0;
+   unsigned reg_dsts_num;
+   trace_reg_t reg_dest[MAX_DST];
+   std::vector<reg_val_t> reg_dest_vals;

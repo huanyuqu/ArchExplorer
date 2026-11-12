@@ -1,0 +1,11 @@
+{
+  "purpose": "Complete tiny ViT/CLIP native program frontend; requires program backend and external pinned engine",
+  "prepare_vit": "archexplorer demo prepare --model vit --engine /absolute/path/engine.json --output runs/vit",
+  "run_vit": "archexplorer demo run runs/vit",
+  "prepare_clip": "archexplorer demo prepare --model clip --engine /absolute/path/engine.json --output runs/clip",
+  "run_clip": "archexplorer demo run runs/clip",
+  "replay": "archexplorer evaluate runs/vit/mapping-000/result.json --output runs/vit-replayed.json",
+  "custom_specs": "archexplorer demo prepare --specs new-shape.json --engine /absolute/path/engine.json --output runs/new-shape",
+  "documentation": "docs/tutorials/05-full-models.md",
+  "scope": "Preparation is not simulation. No full-model success without complete native execution; tiny synthetic reference profiles do not represent standard model or hardware accuracy."
+}

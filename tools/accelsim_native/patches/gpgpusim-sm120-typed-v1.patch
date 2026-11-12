@@ -1,0 +1,204 @@
+diff --git a/src/abstract_hardware_model.cc b/src/abstract_hardware_model.cc
+index dbd4329..f795f78 100644
+--- a/src/abstract_hardware_model.cc
++++ b/src/abstract_hardware_model.cc
+@@ -293,6 +293,13 @@ void warp_inst_t::generate_mem_accesses() {
+   if (m_warp_active_mask.count() == 0) return;  // predicated off
+ 
+   const size_t starting_queue_size = m_accessq.size();
++  if(m_config->gpgpu_coalesce_arch==120) {
++    printf("SIM28_MEMORY pc=%llx warp=%u width=%u mask=%lx addresses=",
++      (unsigned long long)pc,warp_id(),data_size,get_active_mask().to_ulong());
++    for(unsigned lane=0;lane<warp_size();lane++) if(active(lane))
++      printf("%llx,",(unsigned long long)m_per_scalar_thread[lane].memreqaddr[0]);
++    printf("\n");
++  }
+ 
+   assert(is_load() || is_store());
+ 
+@@ -482,6 +489,10 @@ void warp_inst_t::generate_mem_accesses() {
+     m_config->gpgpu_ctx->stats->ptx_file_line_stats_add_uncoalesced_gmem(
+         pc, m_accessq.size() - starting_queue_size);
+   }
++  if(m_config->gpgpu_coalesce_arch==120)
++    printf("SIM28_TRANSACTIONS pc=%llx warp=%u width=%u mask=%lx count=%zu space=%d write=%d\n",
++      (unsigned long long)pc,warp_id(),data_size,get_active_mask().to_ulong(),
++      m_accessq.size()-starting_queue_size,(int)space.get_type(),is_write);
+   m_mem_accesses_created = true;
+ }
+ 
+diff --git a/src/abstract_hardware_model.h b/src/abstract_hardware_model.h
+index 7dd2005..e5c79a2 100644
+--- a/src/abstract_hardware_model.h
++++ b/src/abstract_hardware_model.h
+@@ -63,6 +63,7 @@ class gpgpu_context;
+ #define MAX_BARRIERS_PER_CTA 16
+ 
+ // After expanding the vector input and output operands
++#include "sim28_register.h"
+ #define MAX_INPUT_VALUES 24
+ #define MAX_OUTPUT_VALUES 8
+ 
+@@ -1425,6 +1426,7 @@ class inst_t {
+   unsigned incount;
+   unsigned char is_vectorin;
+   unsigned char is_vectorout;
++  unsigned sim28_predicate_lanes = 0; // actual observed before-predicate lanes
+   int pred;  // predicate register number
+   int ar1, ar2;
+   // register number for bank conflict evaluation
+diff --git a/src/gpgpu-sim/gpu-sim.cc b/src/gpgpu-sim/gpu-sim.cc
+index 3de1367..8df78b5 100644
+--- a/src/gpgpu-sim/gpu-sim.cc
++++ b/src/gpgpu-sim/gpu-sim.cc
+@@ -518,6 +518,8 @@ void shader_core_config::reg_options(class OptionParser *opp) {
+                          "Mapping from local memory space address to simulated "
+                          "GPU physical address space (default = enabled)",
+                          "1");
++  option_parser_register(opp, "-sim28_typed_regs", OPT_BOOL, &sim28_typed_regs,
++                         "SIM28 synthetic typed bank spaces (not physical Blackwell)", "0");
+   option_parser_register(opp, "-gpgpu_num_reg_banks", OPT_INT32,
+                          &gpgpu_num_reg_banks,
+                          "Number of register banks (default = 8)", "8");
+diff --git a/src/gpgpu-sim/scoreboard.cc b/src/gpgpu-sim/scoreboard.cc
+index b52441b..aa83d50 100644
+--- a/src/gpgpu-sim/scoreboard.cc
++++ b/src/gpgpu-sim/scoreboard.cc
+@@ -72,6 +72,8 @@ void Scoreboard::releaseRegister(unsigned wid, unsigned regnum) {
+   if (!(reg_table[wid].find(regnum) != reg_table[wid].end())) return;
+   SHADER_DPRINTF(SCOREBOARD, "Release register - warp:%d, reg: %d\n", wid,
+                  regnum);
++  if(sim28_typed(regnum)) printf("SIM28_RELEASE sid=%u warp=%u reg=%u cycle=%llu\n",
++    m_sid,wid,regnum,(unsigned long long)(m_gpu->gpu_sim_cycle+m_gpu->gpu_tot_sim_cycle));
+   reg_table[wid].erase(regnum);
+ }
+ 
+@@ -80,6 +82,19 @@ const bool Scoreboard::islongop(unsigned warp_id, unsigned regnum) {
+ }
+ 
+ void Scoreboard::reserveRegisters(const class warp_inst_t* inst) {
++  bool typed=false;
++  for(unsigned r=0;r<MAX_INPUT_VALUES;r++) typed |= sim28_typed(inst->in[r]);
++  for(unsigned r=0;r<MAX_OUTPUT_VALUES;r++) typed |= sim28_typed(inst->out[r]);
++  if(typed) {
++    printf("SIM28_ISSUE sid=%u warp=%u pc=%llx cycle=%llu mask=%lx in=",
++      m_sid,inst->warp_id(),(unsigned long long)inst->pc,
++      (unsigned long long)(m_gpu->gpu_sim_cycle+m_gpu->gpu_tot_sim_cycle),
++      inst->get_active_mask().to_ulong());
++    for(unsigned r=0;r<inst->incount;r++) printf("%u,",inst->in[r]);
++    printf(" out=");
++    for(unsigned r=0;r<inst->outcount;r++) printf("%u,",inst->out[r]);
++    printf("\n");
++  }
+   for (unsigned r = 0; r < MAX_OUTPUT_VALUES; r++) {
+     if (inst->out[r] > 0) {
+       reserveRegister(inst->warp_id(), inst->out[r]);
+diff --git a/src/gpgpu-sim/shader.cc b/src/gpgpu-sim/shader.cc
+index 9665694..056d584 100644
+--- a/src/gpgpu-sim/shader.cc
++++ b/src/gpgpu-sim/shader.cc
+@@ -5156,6 +5156,7 @@ void opndcoll_rfu_t::add_port(port_vector_t &input, port_vector_t &output,
+ }
+ 
+ void opndcoll_rfu_t::init(unsigned num_banks, shader_core_ctx *shader) {
++  if (shader->get_config()->sim28_typed_regs) num_banks *= 4;
+   m_shader = shader;
+   m_arbiter.init(m_cu.size(), num_banks);
+   // for( unsigned n=0; n<m_num_ports;n++ )
+@@ -5192,6 +5193,7 @@ void opndcoll_rfu_t::init(unsigned num_banks, shader_core_ctx *shader) {
+ unsigned register_bank(int regnum, int wid, unsigned num_banks,
+                        bool sub_core_model, unsigned banks_per_sched,
+                        unsigned sched_id) {
++  if (sim28_typed(regnum)) return sim28_bank(regnum,wid,num_banks,sub_core_model,banks_per_sched,sched_id);
+   int bank = regnum;
+   bank += wid;
+   if (sub_core_model) {
+@@ -5223,8 +5225,10 @@ bool opndcoll_rfu_t::writeback(warp_inst_t &inst) {
+       }
+     }
+   }
+-  for (unsigned i = 0; i < (unsigned)regs.size(); i++) {
+-    if (m_shader->get_config()->gpgpu_clock_gated_reg_file) {
++  for (auto written_reg : regs) {
++    if(sim28_typed(written_reg)) {
++      m_shader->incregfile_writes(sim28_uniform(written_reg)?1:inst.active_count());
++    } else if (m_shader->get_config()->gpgpu_clock_gated_reg_file) {
+       unsigned active_count = 0;
+       for (unsigned i = 0; i < m_shader->get_config()->warp_size;
+            i = i + m_shader->get_config()->n_regfile_gating_group) {
+@@ -5335,7 +5339,11 @@ void opndcoll_rfu_t::allocate_reads() {
+     unsigned cu = op.get_oc_id();
+     unsigned operand = op.get_operand();
+     m_cu[cu]->collect_operand(operand);
+-    if (m_shader->get_config()->gpgpu_clock_gated_reg_file) {
++    if(sim28_typed(op.get_reg())) printf("SIM28_BANK_READ reg=%u kind=%u bank=%u units=%u\n",
++      op.get_reg(),sim28_kind(op.get_reg()),r->first,op.get_active_count());
++    if(sim28_typed(op.get_reg())) {
++      m_shader->incregfile_reads(op.get_active_count());
++    } else if (m_shader->get_config()->gpgpu_clock_gated_reg_file) {
+       unsigned active_count = 0;
+       for (unsigned i = 0; i < m_shader->get_config()->warp_size;
+            i = i + m_shader->get_config()->n_regfile_gating_group) {
+diff --git a/src/gpgpu-sim/shader.h b/src/gpgpu-sim/shader.h
+index 8d5b761..3fb010d 100644
+--- a/src/gpgpu-sim/shader.h
++++ b/src/gpgpu-sim/shader.h
+@@ -1144,6 +1144,10 @@ class opndcoll_rfu_t
+     }
+     unsigned get_sid() const { return m_shced_id; }
+     unsigned get_active_count() const {
++      if (sim28_uniform(m_register)) return 1;
++      const warp_inst_t *instruction=m_warp ? m_warp : m_cu->instruction();
++      if(sim28_typed(m_register) && instruction->pred==(int)m_register)
++        return instruction->sim28_predicate_lanes;
+       if (m_warp)
+         return m_warp->active_count();
+       else if (m_cu)
+@@ -1351,6 +1355,7 @@ class opndcoll_rfu_t
+     void dump(FILE *fp, const shader_core_ctx *shader) const;
+ 
+     unsigned get_warp_id() const { return m_warp_id; }
++    const warp_inst_t *instruction() const { return m_warp; }
+     unsigned get_active_count() const { return m_warp->active_count(); }
+     const active_mask_t &get_active_mask() const {
+       return m_warp->get_active_mask();
+@@ -2305,6 +2310,7 @@ class shader_core_config : public core_config {
+   int gpgpu_warpdistro_shader;
+   int gpgpu_warp_issue_shader;
+   unsigned gpgpu_num_reg_banks;
++  bool sim28_typed_regs; // explicit experimental bank-space model
+   bool gpgpu_reg_bank_use_warp_id;
+   bool gpgpu_local_mem_map;
+   bool gpgpu_ignore_resources_limitation;
+diff --git a/src/sim28_register.h b/src/sim28_register.h
+new file mode 100644
+index 0000000..80b6e51
+--- /dev/null
++++ b/src/sim28_register.h
+@@ -0,0 +1,26 @@
++// SIM28 synthetic register-bank/typed-dependency mechanism. Apache-2.0.
++// Logical register identity is distinct from bank position and lane accounting.
++// This is an experimental model, not Blackwell physical register-file timing.
++#ifndef ARCH_EXPLORER_SIM28_REGISTER_H
++#define ARCH_EXPLORER_SIM28_REGISTER_H
++#include <cassert>
++inline bool sim28_typed(unsigned id) { return id >= 0x10001 && id <= 0x40100; }
++inline unsigned sim28_kind(unsigned id) { assert(sim28_typed(id)); return (id >> 16)-1; }
++inline unsigned sim28_index(unsigned id) { assert(sim28_typed(id)); return (id & 65535)-1; }
++inline unsigned sim28_encode(unsigned kind, unsigned index) {
++  assert(kind < 4);
++  assert(index < (kind < 2 ? 256u : 8u));
++  if (index == (kind < 2 ? 255u : 7u)) return 0; // RZ, URZ, PT, UPT
++  return ((kind+1)<<16) | (index+1);
++}
++inline bool sim28_uniform(unsigned id) { return sim28_typed(id) && (sim28_kind(id)==1 || sim28_kind(id)==3); }
++inline unsigned sim28_bank(unsigned id, unsigned wid, unsigned total, bool sub, unsigned per_sched, unsigned sched) {
++  assert(sim28_typed(id) && total%4==0);
++  unsigned width=total/4, local=sub ? per_sched/4 : width;
++  assert(local>0 && (!sub || per_sched%4==0));
++  unsigned kind=sim28_kind(id), index=sim28_index(id);
++  // Four independent synthetic bank spaces. Uniform accesses are warp-wide.
++  unsigned bank=kind*width+(sub ? sched*local : 0)+(index+(sim28_uniform(id)?0:wid))%local;
++  assert(bank<total);return bank;
++}
++#endif

@@ -1,0 +1,20 @@
+# Local environments and Python build products
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Generated examples and local configuration
+/runs/
+/demo.json
+.env
+.env.*
+!.env.example
+api_key.json
+.DS_Store

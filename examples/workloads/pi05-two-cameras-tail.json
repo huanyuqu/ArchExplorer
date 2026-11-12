@@ -1,0 +1,53 @@
+{
+  "workloads": [
+    {
+      "kind": "pi05",
+      "params": {
+        "profile": "openpi_pi05",
+        "dtype": "bfloat16",
+        "batch": 2,
+        "action_dim": 32,
+        "action_horizon": 15,
+        "max_token_len": 7,
+        "num_steps": 2,
+        "iterations": 1,
+        "noise_seed": 17,
+        "image_masks": [
+          [
+            true,
+            true
+          ],
+          [
+            true,
+            false
+          ],
+          [
+            false,
+            true
+          ]
+        ],
+        "token_mask": [
+          [
+            true,
+            true,
+            true,
+            true,
+            true,
+            false,
+            false
+          ],
+          [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            false
+          ]
+        ]
+      }
+    }
+  ],
+  "scope": "Semantic WorkloadSpec only; no hardware or latency. Supply a supported native program provider for execution. Standard profiles are not the tiny demo."
+}

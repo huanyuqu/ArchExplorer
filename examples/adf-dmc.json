@@ -1,0 +1,20 @@
+{
+  "seed_adf": {"preset": "dmc", "parameters": {"num_cores": 4}},
+  "workloads": [{"name": "synthetic-matmul", "kind": "operator", "params": {"op": "matmul", "m": 16, "k": 64, "n": 64}, "weight": 1.0}],
+  "backend": "events",
+  "registration_modules": [],
+  "max_evaluations": 64,
+  "cost_budget_usd": null,
+  "area_budget_mm2": null,
+  "cost_penalty": 1.0,
+  "area_penalty": 1.0,
+  "parameter_samples": 4,
+  "mapping_samples": 4,
+  "parameter_radius": 0.25,
+  "growth_probability": 0.75,
+  "shrink_probability": 0.75,
+  "cost_model": {"basis": "raw", "process_nm": {"value": 7, "unit": "nm", "source": "LLMCompass 7nm reference model; synthetic search scenario"}},
+  "random_seed": 17,
+  "search": {"max_steps": 256, "temperature": 1.0, "cooling": 0.95, "max_relative_degradation": 0.25},
+  "agent": {"max_steps": 30, "max_tool_calls": 30}
+}

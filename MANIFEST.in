@@ -1,0 +1,105 @@
+include README.md LICENSE NOTICE pyproject.toml requirements.txt .gitignore
+include EXPORT_MANIFEST.json
+recursive-include .github *.yml
+recursive-include arch_explorer *.py
+recursive-include arch_explorer/components *.hpp *.h *.cc *.cpp *.patch *.md *.json NOTICE
+recursive-include arch_explorer/components/accelsim *.hpp *.cpp
+recursive-include arch_explorer/components/accelsim/component_native *.cc *.cpp *.h *.hpp *.patch *.md NOTICE
+recursive-include arch_explorer/simulator/dynamic *.hpp *.cpp
+recursive-include arch_explorer/components/synthetic_dynamic *.cpp
+recursive-include docs *.md
+recursive-include examples *.json
+recursive-include examples/extensions/synthetic_components *.py *.toml *.md
+recursive-include examples/extensions/workload_components *.py *.toml *.md *.json
+recursive-include examples/extensions/operator_implementations *.py *.toml *.md *.json
+recursive-include examples/extensions/component_implementations *.py *.toml *.md *.json
+recursive-include examples/component_implementations *.py *.md *.json
+include examples/compilation/README.md
+include examples/compilation/agent.py
+include examples/compilation/scene.py
+include examples/compilation/workloads.py
+include examples/attention/README.md
+include examples/attention/scene.py
+include examples/transformer_block/README.md
+include examples/transformer_block/scene.py
+include examples/transformer_block/provider-options.json
+include examples/multilayer_encoder/README.md
+include examples/multilayer_encoder/scene.py
+include examples/multilayer_encoder/provider-options.json
+include examples/vit_compilation/README.md
+include examples/vit_compilation/scene.py
+include examples/vit_compilation/provider-options.json
+include examples/clip_compilation/README.md
+include examples/clip_compilation/scene.py
+include examples/clip_compilation/provider-options.json
+include examples/workload_scenarios/README.md
+include examples/workload_scenarios/scene.py
+include examples/workload_scenarios/mla.py
+include examples/workload_scenarios/structure.py
+include examples/workload_scenarios/joint_search.py
+include examples/workload_scenarios/llm.json
+include examples/onnx_import/README.md
+include examples/onnx_import/models.py
+include examples/onnx_import/emit.py
+include examples/framework_export/README.md
+include examples/framework_export/models.py
+include examples/framework_export/emit.py
+include examples/framework_export/vision_language.py
+include examples/paper_scale/README.md
+include examples/paper_scale/cases.py
+include examples/paper_scale/preflight.py
+include examples/paper_scale/block.py
+include tests/validation/HARDWARE-SAMPLE.md
+include tests/validation/SCALE-LOCK.md
+include tests/validation/CONTINUATION.md
+include tests/validation/CONTINUATION-INSTALLED.md
+include tests/validation/SIM53-CONSUMER.md
+include tests/workload/FRAMEWORK-CONSUMERS.md
+include tests/workload/TRANSFORMER-METADATA.md
+include tests/workload/TYPED-CONSUMER-ORDER.md
+include tests/workload/TYPED-ONNX-ORACLE.md
+include examples/extensions/operator_mappings/README.md
+include examples/extensions/operator_mappings/pyproject.toml
+include examples/extensions/operator_mappings/src/ae_operator_mappings/__init__.py
+include examples/extensions/operator_mappings/src/ae_operator_mappings/__main__.py
+include examples/extensions/operator_mappings/src/ae_operator_mappings/graphs.py
+include examples/extensions/operator_mappings/src/ae_operator_mappings/mapping.py
+include examples/extensions/operator_mappings/src/ae_operator_mappings/semantics.py
+recursive-include examples/gpu_instantiation *.py *.md *.json
+include examples/gpu_instantiation/standalone_icnt.cpp
+include examples/gpu_instantiation/standalone_memory.cpp
+recursive-include skills *.md
+recursive-include tests *.py
+include tests/fixtures/adapter_boundary_extension/pyproject.toml
+include tests/fixtures/adapter_boundary_extension/V1-COMPILATION.json
+include tests/fixtures/operator_attention/INPUTS-v3.json
+include tests/fixtures/operator_attention/V2-COMPILATION.json
+include tests/fixtures/precision_transformer/INPUTS.json
+include tests/fixtures/operator_mapping_extension/pyproject.toml
+include tests/fixtures/composition_builder_extension/pyproject.toml
+include tests/fixtures/multilayer_composition/INPUTS.json
+include tests/fixtures/view_storage/INPUTS.json
+include tests/fixtures/vit_compilation/INPUTS.json
+include tests/fixtures/clip_compilation/INPUTS.json
+include tests/fixtures/workload_scenarios/INPUTS.json
+include tests/fixtures/onnx_import/INPUTS.json
+include tests/fixtures/onnx_continuation/INPUTS.json
+include tests/fixtures/onnx_import/attention/INPUTS.json
+include tests/fixtures/onnx_import/attention/model.onnx
+include tests/fixtures/onnx_import/mlp/INPUTS.json
+include tests/fixtures/onnx_import/mlp/model.onnx
+include tests/fixtures/onnx_import/mlp_external/INPUTS.json
+include tests/fixtures/onnx_import/mlp_external/model.onnx
+include tests/fixtures/onnx_import/mlp_external/weights/data.bin
+include tests/fixtures/onnx_import/sim51/INPUTS.json
+include tests/fixtures/onnx_import/sim51/models/attention.onnx
+include tests/fixtures/onnx_import/sim51/models/mlp.onnx
+include tests/fixtures/onnx_import/sim51/models/mlp.weights
+include tests/workload/ONNX-COVERAGE.md
+recursive-include tools *.py
+recursive-include tools/accelsim_native *.patch *.md *.h *.hpp *.cpp *.cu
+recursive-include tools/accelsim_native/calibration *.json
+prune experiments
+prune visualization
+exclude run_experiment.py idea.md search.md
+global-exclude __pycache__ *.pyc api_key.json

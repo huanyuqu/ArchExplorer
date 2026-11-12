@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "arch-explorer"
+version = "0.2.0"
+description = "Architecture, hardware parameter and workload mapping exploration"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "build>=1"]
+scalesim = ["scalesim==3.0.0"]
+mcp = ["mcp>=1.30,<2"]
+onnx = ["onnx==1.16.2"]
+framework = ["onnx==1.16.2", "torch==2.5.1"]
+
+[project.scripts]
+archexplorer = "arch_explorer.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["arch_explorer*"]
+namespaces = true
+
+[tool.setuptools.package-data]
+"arch_explorer.components" = ["**/*.hpp", "**/*.h", "**/*.cc", "**/*.cpp", "**/*.patch", "**/*.md", "**/*.json", "**/NOTICE"]
+"arch_explorer.components.accelsim" = ["catalog_policy.hpp", "catalog_harness.cpp", "state_executor.hpp", "state_cpu.cpp"]
+"arch_explorer.simulator.dynamic" = ["*.hpp", "*.cpp"]
+"arch_explorer.components.synthetic_dynamic" = ["*.cpp"]
+"arch_explorer.components.accelsim.component_native" = ["*.hpp", "*.h", "*.cpp", "*.cc", "*.patch", "*.md", "NOTICE"]
+
+[project.entry-points."arch_explorer.components"]
+builtin = "arch_explorer.components.builtins:register"
+accelsim = "arch_explorer.components.accelsim:register"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

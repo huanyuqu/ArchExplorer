@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "val55-operator-mapping-extension"
+version = "0.1.0"
+description = "QA unknown operator mapping fixture, without a timing model"
+requires-python = ">=3.10"
+
+[project.entry-points."arch_explorer.components"]
+val55_mapping = "val55_mapping_extension:register"
+
+[tool.setuptools.packages.find]
+where = ["src"]

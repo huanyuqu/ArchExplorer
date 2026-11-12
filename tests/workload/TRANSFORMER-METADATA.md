@@ -1,0 +1,13 @@
+# Transformer 性能图的元数据验收
+
+正式输入 TRANSFORMER-INPUTS.json 的 SHA256 为66d68308d446967676b5818c84cdb3f758ebde2d32f42a58051bb14febc3ad14。四族完整decoder层数、B1/S2048、prefill/decode和TP1/8的16行是无答案请求。原typed ONNX输入4465f471保持原身份。
+
+`transformer_metadata_consumer.py --inputs INPUT --output NEW_DIR` 等负责人唯一候选安装后运行，要求site-packages。完整请求通过CORE公共`preflight_scale_case`接SIM公共`transformer_preflight`，临时禁止Workload/Tensor/Operator构造。先保存实际wrapper/result与request/budget/metrics/violations/plan，再核独立账本、原case不变、实际TP、producer、admitted/budget-refused及graph_executed/service_executed=false。完整行每次只调用一条预检链，不额外重复直接调用。它不构造全尺寸图，不执行编译、prepare、数值参考或组件服务。admitted=false按实际预算拒绝记录，不能据预检返回或进程退出0声称论文规模阶段完成。
+
+独立账本只用整数尺寸推导单个TP rank的四投影、两次attention矩阵乘、逻辑weights/KV和中间量。GQA的KV头在tp大于KV头数时复制；所以每rank权重/缓存不可一律除tp。iterations只乘执行工作量，不把驻留逻辑张量按迭代数重复计存储；输入x0在多层间只计一次。词表/embedding/LM head不在decoder层范围。矩阵FMA不换算FLOP/目标周期，向量元素不冒称目标指令费用。
+
+`--tiny-graph`仅增加H4/双query头/单KV头/I6/S3/两层的合成元数据控制：TP1和TP2、完整预算保存、省略预算旧Graph字节一致、逻辑total恰好/少1B拒绝。临界预检通过CORE显式resource_budget覆盖行内预算，核覆盖结果及原case不改写；构图拒绝须在任何Graph对象构造前发生。materialized_root_bytes/root_python_bytes均为0，逻辑weights/KV/root bytes仍非零；max_root_bytes为1不等于真实数值初始化或物理SRAM容量获准。
+
+手算正控：TP1 prefill每层120个权重元素、12个KV元素、198个临时元素和432次FMA；fp16两层加一次12元素x0，root552B、temporary792B、total1344B。TP2的KV复制，root344B、total1004B、每迭代480FMA，两个allreduce每迭代96B。decode使用一个query，完整KV仍保留，TP1总800B。所有这些是整数参考控制，未生成数值权重、未执行产品规模阶段。
+
+estimated_host_bytes只核字段与类型，并与实际宿主观测分列。plan的replicas/physical_peak_bytes必须是null，直到真实mapping/plan产生。compact KV继续走既有MappingTemplate/prepare_request；本消费者不将其改标成compile_graph完整数值根已支持。全尺寸构图/编译/服务分别沿实际阶段原件审计，运行时显式绑定协作约定锁；公开工具使用`<ABSOLUTE_SHARED_LOCK_PATH>`占位。当前源码准备阶段不启动这些阶段，旧矩阵和MLA窗口保持。

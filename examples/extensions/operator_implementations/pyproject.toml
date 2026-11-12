@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "archexplorer-operator-implementations"
+version = "0.1.0"
+description = "External operator semantics and selectable execution implementations for ArchExplorer"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+dependencies = ["arch-explorer>=0.2.0", "numpy>=1.24"]
+
+[project.entry-points."arch_explorer.components"]
+operator_implementations = "ae_operator_implementations:register"
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,7 @@
+{
+  "purpose": "Synthetic native integration example; no hardware accuracy evidence",
+  "generate": "python -m arch_explorer.simulator.accelsim.example /tmp/accelsim-example --engine /absolute/path/engine.json",
+  "evaluate": "archexplorer evaluate /tmp/accelsim-example/request.json --output /tmp/accelsim-result.json",
+  "replay": "archexplorer evaluate /tmp/accelsim-result.json --output /tmp/accelsim-replayed.json",
+  "documentation": "docs/accelsim.md"
+}

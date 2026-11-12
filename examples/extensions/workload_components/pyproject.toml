@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "archexplorer-workload-example"
+version = "0.1.0"
+description = "External branching workload, affine operator and row mapping for ArchExplorer"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+dependencies = ["arch-explorer>=0.2.0"]
+
+[project.entry-points."arch_explorer.components"]
+workload_example = "ae_workload_example:register"
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "val57-composition-builder-extension"
+version = "0.1.0"
+description = "QA external FP32 workload builder for nested composition provenance"
+requires-python = ">=3.10"
+
+[project.entry-points."arch_explorer.components"]
+val57_composition = "val57_composition_extension:register"
+
+[tool.setuptools.packages.find]
+where = ["src"]

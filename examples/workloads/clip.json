@@ -1,0 +1,17 @@
+{
+  "workloads": [
+    {
+      "kind": "clip",
+      "name": "clip_vit_b32",
+      "params": {
+        "profile": "clip_vit_b32",
+        "dtype": "fp16",
+        "iterations": 1,
+        "image_batch": 1,
+        "text_batch": 2
+      },
+      "weight": 1.0
+    }
+  ],
+  "scope": "Semantic WorkloadSpec only; no hardware or latency. Supply a supported native program provider for execution. Standard profiles are not the tiny demo."
+}

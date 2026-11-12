@@ -1,0 +1,128 @@
+{
+  "schema": "arch-explorer.val62.independent-input.v1",
+  "case": "attention",
+  "opset": 17,
+  "IR": 8,
+  "model": {
+    "path": "model.onnx",
+    "sha256": "674468fab06417848c1d5edb1536aed9a5bb56194ec7589682c1c79531f03632",
+    "bytes": 785
+  },
+  "external_data": {},
+  "feeds": {
+    "X": {
+      "dtype": "float32",
+      "shape": [
+        2,
+        3,
+        4
+      ],
+      "values": [
+        [
+          [
+            -0.6875,
+            -0.625,
+            -0.5625,
+            -0.5
+          ],
+          [
+            -0.4375,
+            -0.375,
+            -0.3125,
+            -0.25
+          ],
+          [
+            -0.1875,
+            -0.125,
+            -0.0625,
+            0.0
+          ]
+        ],
+        [
+          [
+            0.0625,
+            0.125,
+            0.1875,
+            0.25
+          ],
+          [
+            0.3125,
+            0.375,
+            0.4375,
+            0.5
+          ],
+          [
+            0.5625,
+            0.625,
+            0.6875,
+            0.75
+          ]
+        ]
+      ]
+    },
+    "mask": {
+      "dtype": "float32",
+      "shape": [
+        1,
+        3,
+        3
+      ],
+      "values": [
+        [
+          [
+            0.0,
+            -4.0,
+            -8.0
+          ],
+          [
+            0.0,
+            0.0,
+            -4.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ]
+      ]
+    }
+  },
+  "outputs": [
+    "Y",
+    "P"
+  ],
+  "initializers": [
+    {
+      "name": "Wqk",
+      "dtype": 1,
+      "shape": [
+        4,
+        2
+      ]
+    },
+    {
+      "name": "Wv",
+      "dtype": 1,
+      "shape": [
+        4,
+        3
+      ]
+    },
+    {
+      "name": "kb",
+      "dtype": 1,
+      "shape": [
+        2
+      ]
+    },
+    {
+      "name": "scale",
+      "dtype": 1,
+      "shape": [
+        1
+      ]
+    }
+  ],
+  "contains_expected_answers": false
+}

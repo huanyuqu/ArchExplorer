@@ -1,0 +1,115 @@
+{
+  "seed_adf": {
+    "preset": "dmc",
+    "parameters": {
+      "num_cores": 4
+    }
+  },
+  "workloads": [
+    {
+      "name": "synthetic-embodied-projection",
+      "kind": "operator",
+      "params": {
+        "op": "matmul",
+        "batch": 1,
+        "m": 1,
+        "k": 256,
+        "n": 64,
+        "dtype": "fp16"
+      },
+      "weight": 1.0
+    }
+  ],
+  "backend": "events",
+  "max_evaluations": 16,
+  "parameter_samples": 1,
+  "mapping_samples": 4,
+  "mapping_templates": [
+    "dmc_partition"
+  ],
+  "area_budget_mm2": null,
+  "cost_budget_usd": null,
+  "area_penalty": 0.0,
+  "cost_penalty": 0.0,
+  "random_seed": 17,
+  "cost_model": {
+    "basis": "raw",
+    "process_nm": {
+      "value": 7,
+      "unit": "nm",
+      "source": "synthetic tutorial scenario, not measured hardware"
+    }
+  },
+  "search": {
+    "max_steps": 8,
+    "temperature": 1000.0,
+    "cooling": 0.95,
+    "max_relative_degradation": 0.25,
+    "proposals": [
+      [
+        {
+          "op": "delete",
+          "component": "chip/noc"
+        },
+        {
+          "op": "create",
+          "container": "chip",
+          "spec": {
+            "type": "point",
+            "name": "noc",
+            "component": "bus",
+            "params": {
+              "bandwidth": {
+                "value": 64.0,
+                "unit": "B/ns",
+                "source": "synthetic seed"
+              },
+              "latency": {
+                "value": 1.0,
+                "unit": "ns",
+                "source": "synthetic seed"
+              }
+            }
+          }
+        }
+      ],
+      [
+        {
+          "op": "delete",
+          "component": "chip/noc"
+        },
+        {
+          "op": "create",
+          "container": "chip",
+          "spec": {
+            "type": "point",
+            "name": "noc",
+            "component": "mesh2d",
+            "params": {
+              "cols": {
+                "value": 5,
+                "unit": "count",
+                "source": "synthetic seed"
+              },
+              "hop_latency": {
+                "value": 1.0,
+                "unit": "ns",
+                "source": "synthetic seed"
+              },
+              "link_bandwidth": {
+                "value": 64.0,
+                "unit": "B/ns",
+                "source": "synthetic seed"
+              },
+              "rows": {
+                "value": 1,
+                "unit": "count",
+                "source": "synthetic seed"
+              }
+            }
+          }
+        }
+      ]
+    ]
+  }
+}

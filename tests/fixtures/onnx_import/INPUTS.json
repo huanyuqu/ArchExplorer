@@ -1,0 +1,28 @@
+{
+  "schema": "arch-explorer.val62.independent-model-set.v1",
+  "ONNX_release": "1.16.2",
+  "opset": 17,
+  "IR": 8,
+  "cases": {
+    "mlp": {
+      "manifest": "mlp/INPUTS.json",
+      "model": "mlp/model.onnx",
+      "external": false,
+      "model_sha256": "6a62c44c1f3a663d4e5eba91ba91e25b620c0c5a4fc7cb9d19887ac8ad1e9fa8"
+    },
+    "attention": {
+      "manifest": "attention/INPUTS.json",
+      "model": "attention/model.onnx",
+      "external": false,
+      "model_sha256": "674468fab06417848c1d5edb1536aed9a5bb56194ec7589682c1c79531f03632"
+    },
+    "mlp_external": {
+      "manifest": "mlp_external/INPUTS.json",
+      "model": "mlp_external/model.onnx",
+      "external": true,
+      "model_sha256": "851b24d7f71f4927f3f45f58b9cb460bf1e94e4115713d4e8a49337fefa13626"
+    }
+  },
+  "expected_answers_included": false,
+  "product_importer_used": false
+}

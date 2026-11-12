@@ -1,0 +1,31 @@
+{
+  "inputs": {
+    "component_native/configuration_api.hpp": "f661a87ccf3ecf5de52fa7a8b96980bb3ee88ec50042ef2d917b5fc223161950",
+    "component_native/execution.cc": "b2c0a95039467faa6adfb0f87201b6876753cc9fa4329ab93c404484477271c7",
+    "component_native/execution.hpp": "9a752bffb89c40c381c66d08426f8f1c6f731bdfc69747f7315c389ef41467dd",
+    "component_native/gpu_assembly.cc": "fdbf209650d448ad9117de1f367fa16ee3a4080dd3ff632e19c41ea8d6f7156d",
+    "component_native/gpu_assembly.hpp": "4fc0b60e135198240d6c2da34b1b0808e182800309c11fd82126e429ae7cbac0",
+    "component_native/gpu_entry.cc": "e844f3b93e4946b01b92e5573915a3654aea5ffb8f53fa875c28eb5fd811642f",
+    "component_native/gpu_transport.cc": "8915252267971b674ede2856128cacd46f0ae629a66ccc3045e53281fc52c780",
+    "component_native/gpu_transport.hpp": "d844785eacf830b39bfdd9daddd63dc8e883726131367e91ca3b808c6f987b9a",
+    "component_native/icnt.cc": "a3607c085e2ff20f850930ba5060896b58a3c81679cdc08673b46a0e0c5a5396",
+    "component_native/icnt_api.hpp": "ce07dd30e460b61bcdab1dc2a8b2177a5939ef70c572e942b86f6a508d9d04b6",
+    "component_native/instruction_config.hpp": "19728cc6fa43b45f8318e1399f1a02c6adae01c8c984e08a760e1d3846ddaaf3",
+    "component_native/memory.cc": "0bc3afea8385336ad613f2183bb88880eff8b8a9508fa136817694a625120d7d",
+    "component_native/memory_api.hpp": "df2512360903fea09b8364a61f29bd31564193d86e580423614e96f4d2a8b0b6",
+    "component_native/memory_links.cc": "1aacba456900fc5efe1b7aca2baca997c8bd4e5143567a929e0e2c125656b1f8",
+    "component_native/memory_links.hpp": "41a07ad6829a4ab9477107228d55fd96d186a0a1efd8d0058c27a74697b121ab",
+    "component_native/memory_services.hpp": "2d0d2396ff5ad54980594e03536494548bb0b2e82707de55e489f8b5936bc267",
+    "component_native/memory_system.cc": "2e1d7a156ad140f7db502a568d3df0b5a560953b16a74752ea526ba5336433af",
+    "component_native/memory_system.hpp": "2977276493af2f78d0f12648557ed1d92f3705fe1529650dfac2f00bee1f174c",
+    "component_native/partition_random.hpp": "49c6a2151db63edc5ea03b1df07f50deaba9340eb077fc4dcf59acb4799794d7",
+    "component_native/services.hpp": "5f407e467321baa0ec53983d297db3a75472278536987310ed237a6cc450850e",
+    "component_native/shader.cc": "9316ee41919a071c41f2adc82d6cc222b579475cf620b95b710df6bb2bbd22ec",
+    "component_native/shader_api.hpp": "0ecab7a03b1b717e7296318613f3e10a0f2e5945fd71dd09a129bd2db5843070",
+    "component_native/shader_services.hpp": "b9b15b85c47f219fc50d62f56df370e917f8703a680e289be8a12b6b97f7c9b5",
+    "component_native/transactions.cc": "c8e09b04456628c42e84b26c2734d060ab5aa6e84571e0a81fbdcad33fbb02d9",
+    "component_native/transactions.hpp": "9b069b273aa704552e655813ffc1ebac6705199e6ffd36e8fb6d8035230e1899"
+  },
+  "schema": "arch-explorer.accelsim-native-baseline.v1",
+  "source_commit": "3a6e614ad619b51270ffeaaf941cdb22259a0bda"
+}

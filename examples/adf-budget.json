@@ -1,0 +1,67 @@
+{
+  "seed_adf": {
+    "preset": "dmc",
+    "parameters": {
+      "num_cores": 4
+    }
+  },
+  "workloads": [
+    {
+      "name": "synthetic-matmul",
+      "kind": "operator",
+      "params": {
+        "op": "matmul",
+        "m": 16,
+        "k": 64,
+        "n": 64
+      },
+      "weight": 1.0
+    }
+  ],
+  "backend": "events",
+  "registration_modules": [],
+  "max_evaluations": 32,
+  "cost_budget_usd": 15,
+  "area_budget_mm2": null,
+  "cost_penalty": 100,
+  "area_penalty": 1,
+  "parameter_samples": 8,
+  "mapping_samples": 1,
+  "mapping_templates": [
+    "dmc_partition"
+  ],
+  "parameter_radius": 0.25,
+  "growth_probability": 0.75,
+  "shrink_probability": 1.0,
+  "parameter_domains": [
+    {
+      "path": "chip/core/sram",
+      "param": "capacity",
+      "values": [
+        524288,
+        1048576,
+        2097152
+      ],
+      "source": "synthetic non-GPU DMC experiment: 0.5/1/2 MiB private SRAM"
+    }
+  ],
+  "cost_model": {
+    "basis": "raw",
+    "process_nm": {
+      "value": 7,
+      "unit": "nm",
+      "source": "LLMCompass 7nm reference scenario"
+    }
+  },
+  "random_seed": 17,
+  "search": {
+    "max_steps": 64,
+    "temperature": 1.0,
+    "cooling": 0.95,
+    "max_relative_degradation": 0.25
+  },
+  "agent": {
+    "max_steps": 30,
+    "max_tool_calls": 30
+  }
+}

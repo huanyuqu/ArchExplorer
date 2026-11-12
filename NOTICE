@@ -1,0 +1,144 @@
+ArchExplorer integrates work from:
+
+1. huanyuqu/ArchExplorer, commit 4b1baeba3d02102c96f602f69435c2f57346f309
+   Architecture grammar, region specifications, analytical models and search.
+
+2. huanyuqu/MetaDSE, commit 8e74963278958b8c94f0bd1f94d901730c0afbd2
+   Python task graph, mapping actions, resource models and discrete-event engine.
+   The source repository supplies the Apache License, Version 2.0.
+
+The MetaDSE-derived Python dependency closure has been relocated into
+arch_explorer/simulator and arch_explorer/workload. Imports were namespaced;
+standalone research demos and the obsolete protobuf loader were excluded;
+a communication-point indentation error was corrected, and a type-only torch
+dependency was made optional. Further local modifications are described in
+docs/integration.md. Original copyright and license terms remain applicable.
+The migrated edge transfer volume was corrected to include bytes per element.
+
+The new integration entry points, model adapter, synthetic examples and tests
+are distributed with this release under the Apache License, Version 2.0.
+
+3. SCALE-Sim v3 (scalesim 3.0.0, https://github.com/scalesim-project/SCALE-Sim),
+   MIT License.
+   Optional runtime dependency, installed with the `scalesim` extra and not
+   redistributed in this package. arch_explorer/components/systolic_model.py
+   is an independent closed-form implementation of SCALE-Sim's GEMM timing
+   and SRAM-access semantics, with references to the corresponding SCALE-Sim
+   functions; its results are checked against SCALE-Sim in the test suite.
+
+
+4. Accel-Sim v2.0.1, commit 1c9cc831c5d948f89fa9dc8f21f6c87952f5f2ea.
+   The attributed SM90 parameter selections and Hopper opcode-category catalog
+   are derived from the fixed upstream source. Native tools and collected
+   traces are external resources, not redistributed in the public package.
+
+Accel-Sim framework LICENSE
+BSD 2-Clause License
+
+Copyright (c) 2018-2021, Vijay Kandiah, Junrui Pan, Mahmoud Khairy, Scott Peverelle, Timothy Rogers, Tor M. Aamodt, Nikos Hardavellas
+Northwestern University, Purdue University, The University of British Columbia
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer;
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution;
+3. Neither the names of Northwestern University, Purdue University,
+   The University of British Columbia nor the names of their contributors
+   may be used to endorse or promote products derived from this software
+   without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+GPGPU-Sim COPYRIGHT
+Copyright (c) 2009-2011
+Tor M. Aamodt and The University of British Columbia (UBC)
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+Neither the name of the copyright holders nor the names of its
+contributors may be used to endorse or promote products derived from this
+software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+NOTE 1: The files libcuda/cuda_runtime_api.cc and src/cuda-sim/cuda-math.h are
+derived from the CUDA Toolset available from http://www.nvidia.com/cuda
+(property of NVIDIA).  The files from src/intersim/ are derived from Booksim (a
+simulator provided with the textbook "Principles and Practices of
+Interconnection Networks" available from http://cva.stanford.edu/books/ppin/).
+The files from src/cuda-sim/decuda_pred_table/ are derived from decuda
+(https://github.com/laanwj/decuda/wiki).
+As such, those files are bound by the corresponding legal terms and conditions
+set forth separately (original copyright notices are left in files from these
+sources and where we have modified a file our copyright notice appears before
+the original copyright notice).
+
+NOTE 2: Various UBC graduate students have contributed to different files in
+this distribution.  As copyright ownership at UBC is held by the authors (as
+per UBC policy 88, item 2.3 on literary works) these students names appear in
+the copyright notices of the respective files. UBC is also mentioned in the
+copyright notice to highlight that was the author's affiliation when the work
+was performed.
+
+NOTE 3: AccelWattch and all its components are covered by the following license and copyright.
+Copyright (c) 2018-2021, Vijay Kandiah, Junrui Pan, Mahmoud Khairy, Scott Peverelle, Timothy Rogers, Tor M. Aamodt, Nikos Hardavellas
+Northwestern University, Purdue University, The University of British Columbia
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer;
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution;
+3. Neither the names of Northwestern University, Purdue University,
+   The University of British Columbia nor the names of their contributors
+   may be used to endorse or promote products derived from this software
+   without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+

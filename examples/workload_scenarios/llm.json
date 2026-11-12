@@ -1,0 +1,38 @@
+{
+  "schema": "archexplorer.llm-scenario.v1",
+  "hardware": {
+    "factory": "non_gpu_adf",
+    "parameters": {"num_cores": 1, "matrix_precision": "fp16", "dram_capacity_bytes": 68719476736}
+  },
+  "workloads": [
+    {"model": "llama2-7b", "phase": "prefill", "batch": 1, "seq_len": 4, "layers": 1, "dtype": "fp16", "iterations": 1}
+  ],
+  "mapping": {
+    "template": "dmc_partition",
+    "requests": [
+      {"split": "n", "weights": "stream", "activations": "local"},
+      {"split": "m", "weights": "stream", "activations": "local"}
+    ]
+  },
+  "backend": "events",
+  "backend_options": {"scheduler": "consistent", "systolic_model": "native", "check_capacity": true, "iterations": 1, "trace": false},
+  "search": {
+    "max_evaluations": 4,
+    "parameter_samples": 1,
+    "mapping_samples": 2,
+    "random_seed": 32,
+    "parameter_domains": [
+      {"path": "chip/core/sram", "param": "capacity", "values": [1, 4194304, 8388608], "source": "independent synthetic SRAM range with a one-byte rejection control; not hardware calibration"}
+    ],
+    "settings": {
+      "max_steps": 2,
+      "max_proposals": 2,
+      "temperature": 1.0,
+      "cooling": 0.95,
+      "max_relative_degradation": 0.0,
+      "proposals": [
+        {"tool": "set_parameters", "args": {"parameters": [{"path": "chip/core/sram", "param": "capacity", "value": 1, "source": "explicit bounded synthetic capacity rejection proposal"}]}}
+      ]
+    }
+  }
+}

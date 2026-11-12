@@ -1,0 +1,16 @@
+{
+  "workloads": [
+    {
+      "kind": "vit",
+      "name": "vit_b16_224",
+      "params": {
+        "profile": "vit_b16_224",
+        "dtype": "fp16",
+        "iterations": 1,
+        "batch": 1
+      },
+      "weight": 1.0
+    }
+  ],
+  "scope": "Semantic WorkloadSpec only; no hardware or latency. Supply a supported native program provider for execution. Standard profiles are not the tiny demo."
+}

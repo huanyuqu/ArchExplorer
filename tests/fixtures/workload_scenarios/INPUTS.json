@@ -1,0 +1,2670 @@
+{
+  "budget": {
+    "memory_bytes": 8589934592,
+    "parallel_processes": 1,
+    "threads": 1,
+    "timeout_seconds": 120
+  },
+  "precision": "FP32 roots/ordered FMA/FP32 stores; absorbed projections define rounding boundary",
+  "scenarios": {
+    "grouped_multicast": {
+      "adf": {
+        "elements": [
+          {
+            "component": "dram",
+            "name": "dram",
+            "params": {
+              "bandwidth": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B/ns",
+                "value": 16.0
+              },
+              "capacity": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B",
+                "value": 67108864
+              },
+              "latency": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "ns",
+                "value": 4.0
+              },
+              "technology": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "1",
+                "value": "hbm"
+              }
+            },
+            "type": "point"
+          },
+          {
+            "component": "sram",
+            "name": "root_sram",
+            "params": {
+              "bandwidth": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B/ns",
+                "value": 16.0
+              },
+              "capacity": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B",
+                "value": 32768
+              },
+              "latency": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "ns",
+                "value": 1.0
+              }
+            },
+            "type": "point"
+          },
+          {
+            "elements": [
+              {
+                "component": "sm",
+                "implementation": {
+                  "id": "sm.events",
+                  "params": {
+                    "clock_ghz": {
+                      "source": "explicit synthetic grouped storage/tree service",
+                      "unit": "GHz",
+                      "value": 1.0
+                    },
+                    "lanes": {
+                      "source": "explicit synthetic grouped storage/tree service",
+                      "unit": "count",
+                      "value": 8
+                    },
+                    "sfu_lanes": {
+                      "source": "explicit synthetic grouped storage/tree service",
+                      "unit": "count",
+                      "value": 1
+                    }
+                  },
+                  "version": "1"
+                },
+                "name": "sm",
+                "params": {
+                  "precision": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "1",
+                    "value": "fp32"
+                  }
+                },
+                "type": "point"
+              }
+            ],
+            "name": "root",
+            "networks": [
+              {
+                "component": "multicast_tree",
+                "name": "tree",
+                "params": {
+                  "hop_latency": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "ns",
+                    "value": 1.0
+                  },
+                  "link_bandwidth": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "B/ns",
+                    "value": 16.0
+                  },
+                  "port_bandwidth": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "B/ns",
+                    "value": 16.0
+                  }
+                },
+                "type": "point"
+              }
+            ],
+            "type": "matrix"
+          },
+          {
+            "elements": [
+              {
+                "component": "sram",
+                "name": "sram",
+                "params": {
+                  "bandwidth": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "B/ns",
+                    "value": 16.0
+                  },
+                  "capacity": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "B",
+                    "value": 32768
+                  },
+                  "latency": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "ns",
+                    "value": 1.0
+                  }
+                },
+                "type": "point"
+              },
+              {
+                "elements": [
+                  {
+                    "component": "sm",
+                    "implementation": {
+                      "id": "sm.events",
+                      "params": {
+                        "clock_ghz": {
+                          "source": "explicit synthetic grouped storage/tree service",
+                          "unit": "GHz",
+                          "value": 1.0
+                        },
+                        "lanes": {
+                          "source": "explicit synthetic grouped storage/tree service",
+                          "unit": "count",
+                          "value": 8
+                        },
+                        "sfu_lanes": {
+                          "source": "explicit synthetic grouped storage/tree service",
+                          "unit": "count",
+                          "value": 1
+                        }
+                      },
+                      "version": "1"
+                    },
+                    "name": "sm",
+                    "params": {
+                      "precision": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "1",
+                        "value": "fp32"
+                      }
+                    },
+                    "type": "point"
+                  }
+                ],
+                "name": "tile",
+                "networks": [
+                  {
+                    "component": "multicast_tree",
+                    "name": "tree",
+                    "params": {
+                      "hop_latency": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "ns",
+                        "value": 1.0
+                      },
+                      "link_bandwidth": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "B/ns",
+                        "value": 16.0
+                      },
+                      "port_bandwidth": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "B/ns",
+                        "value": 16.0
+                      }
+                    },
+                    "type": "point"
+                  }
+                ],
+                "repeat": 2,
+                "type": "matrix"
+              }
+            ],
+            "name": "group",
+            "networks": [
+              {
+                "component": "multicast_tree",
+                "name": "tree",
+                "params": {
+                  "hop_latency": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "ns",
+                    "value": 1.0
+                  },
+                  "link_bandwidth": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "B/ns",
+                    "value": 16.0
+                  },
+                  "port_bandwidth": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "B/ns",
+                    "value": 16.0
+                  }
+                },
+                "type": "point"
+              }
+            ],
+            "repeat": 2,
+            "type": "matrix"
+          }
+        ],
+        "name": "board",
+        "networks": [
+          {
+            "component": "multicast_tree",
+            "name": "tree",
+            "params": {
+              "hop_latency": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "ns",
+                "value": 1.0
+              },
+              "link_bandwidth": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B/ns",
+                "value": 16.0
+              },
+              "port_bandwidth": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B/ns",
+                "value": 16.0
+              }
+            },
+            "type": "point"
+          }
+        ],
+        "type": "matrix"
+      },
+      "mapping": {
+        "params": {
+          "compute": {
+            "Y": "board/root/sm",
+            "head0.content_scores": "board/group[0]/tile[0]/sm",
+            "head0.context": "board/group[0]/tile[0]/sm",
+            "head0.latent.transpose": "board/group[0]/tile[0]/sm",
+            "head0.output": "board/group[0]/tile[0]/sm",
+            "head0.pos.transpose": "board/group[0]/tile[0]/sm",
+            "head0.pos_query.mm": "board/group[0]/tile[0]/sm",
+            "head0.pos_query.reshape": "board/group[0]/tile[0]/sm",
+            "head0.pos_scores": "board/group[0]/tile[0]/sm",
+            "head0.query.mm": "board/group[0]/tile[0]/sm",
+            "head0.query.reshape": "board/group[0]/tile[0]/sm",
+            "head0.query.rows": "board/group[0]/tile[0]/sm",
+            "head0.rope": "board/group[0]/tile[0]/sm",
+            "head0.rope.rows": "board/group[0]/tile[0]/sm",
+            "head0.scale": "board/group[0]/tile[0]/sm",
+            "head0.scores": "board/group[0]/tile[0]/sm",
+            "head0.softmax": "board/group[0]/tile[0]/sm",
+            "head1.content_scores": "board/group[0]/tile[1]/sm",
+            "head1.context": "board/group[0]/tile[1]/sm",
+            "head1.latent.transpose": "board/group[0]/tile[1]/sm",
+            "head1.output": "board/group[0]/tile[1]/sm",
+            "head1.pos.transpose": "board/group[0]/tile[1]/sm",
+            "head1.pos_query.mm": "board/group[0]/tile[1]/sm",
+            "head1.pos_query.reshape": "board/group[0]/tile[1]/sm",
+            "head1.pos_scores": "board/group[0]/tile[1]/sm",
+            "head1.query.mm": "board/group[0]/tile[1]/sm",
+            "head1.query.reshape": "board/group[0]/tile[1]/sm",
+            "head1.query.rows": "board/group[0]/tile[1]/sm",
+            "head1.rope": "board/group[0]/tile[1]/sm",
+            "head1.rope.rows": "board/group[0]/tile[1]/sm",
+            "head1.scale": "board/group[0]/tile[1]/sm",
+            "head1.scores": "board/group[0]/tile[1]/sm",
+            "head1.softmax": "board/group[0]/tile[1]/sm",
+            "head2.content_scores": "board/group[1]/tile[0]/sm",
+            "head2.context": "board/group[1]/tile[0]/sm",
+            "head2.latent.transpose": "board/group[1]/tile[0]/sm",
+            "head2.output": "board/group[1]/tile[0]/sm",
+            "head2.pos.transpose": "board/group[1]/tile[0]/sm",
+            "head2.pos_query.mm": "board/group[1]/tile[0]/sm",
+            "head2.pos_query.reshape": "board/group[1]/tile[0]/sm",
+            "head2.pos_scores": "board/group[1]/tile[0]/sm",
+            "head2.query.mm": "board/group[1]/tile[0]/sm",
+            "head2.query.reshape": "board/group[1]/tile[0]/sm",
+            "head2.query.rows": "board/group[1]/tile[0]/sm",
+            "head2.rope": "board/group[1]/tile[0]/sm",
+            "head2.rope.rows": "board/group[1]/tile[0]/sm",
+            "head2.scale": "board/group[1]/tile[0]/sm",
+            "head2.scores": "board/group[1]/tile[0]/sm",
+            "head2.softmax": "board/group[1]/tile[0]/sm",
+            "head3.content_scores": "board/group[1]/tile[1]/sm",
+            "head3.context": "board/group[1]/tile[1]/sm",
+            "head3.latent.transpose": "board/group[1]/tile[1]/sm",
+            "head3.output": "board/group[1]/tile[1]/sm",
+            "head3.pos.transpose": "board/group[1]/tile[1]/sm",
+            "head3.pos_query.mm": "board/group[1]/tile[1]/sm",
+            "head3.pos_query.reshape": "board/group[1]/tile[1]/sm",
+            "head3.pos_scores": "board/group[1]/tile[1]/sm",
+            "head3.query.mm": "board/group[1]/tile[1]/sm",
+            "head3.query.reshape": "board/group[1]/tile[1]/sm",
+            "head3.query.rows": "board/group[1]/tile[1]/sm",
+            "head3.rope": "board/group[1]/tile[1]/sm",
+            "head3.rope.rows": "board/group[1]/tile[1]/sm",
+            "head3.scale": "board/group[1]/tile[1]/sm",
+            "head3.scores": "board/group[1]/tile[1]/sm",
+            "head3.softmax": "board/group[1]/tile[1]/sm",
+            "merge.1": "board/root/sm",
+            "merge.2": "board/root/sm",
+            "merge.3": "board/root/sm",
+            "query.down.mm": "board/root/sm",
+            "query.down.reshape": "board/root/sm",
+            "query.norm": "board/root/sm"
+          },
+          "memory": {
+            "Y": "board/root_sram",
+            "head0.content_scores": "board/group[0]/sram",
+            "head0.context": "board/group[0]/sram",
+            "head0.latent.transpose": "board/group[0]/sram",
+            "head0.output": "board/group[0]/sram",
+            "head0.pos.transpose": "board/group[0]/sram",
+            "head0.pos_query.mm": "board/group[0]/sram",
+            "head0.pos_query.reshape": "board/group[0]/sram",
+            "head0.pos_scores": "board/group[0]/sram",
+            "head0.query.mm": "board/group[0]/sram",
+            "head0.query.reshape": "board/group[0]/sram",
+            "head0.query.rows": "board/group[0]/sram",
+            "head0.rope": "board/group[0]/sram",
+            "head0.rope.rows": "board/group[0]/sram",
+            "head0.scale": "board/group[0]/sram",
+            "head0.scores": "board/group[0]/sram",
+            "head0.softmax": "board/group[0]/sram",
+            "head1.content_scores": "board/group[0]/sram",
+            "head1.context": "board/group[0]/sram",
+            "head1.latent.transpose": "board/group[0]/sram",
+            "head1.output": "board/group[0]/sram",
+            "head1.pos.transpose": "board/group[0]/sram",
+            "head1.pos_query.mm": "board/group[0]/sram",
+            "head1.pos_query.reshape": "board/group[0]/sram",
+            "head1.pos_scores": "board/group[0]/sram",
+            "head1.query.mm": "board/group[0]/sram",
+            "head1.query.reshape": "board/group[0]/sram",
+            "head1.query.rows": "board/group[0]/sram",
+            "head1.rope": "board/group[0]/sram",
+            "head1.rope.rows": "board/group[0]/sram",
+            "head1.scale": "board/group[0]/sram",
+            "head1.scores": "board/group[0]/sram",
+            "head1.softmax": "board/group[0]/sram",
+            "head2.content_scores": "board/group[1]/sram",
+            "head2.context": "board/group[1]/sram",
+            "head2.latent.transpose": "board/group[1]/sram",
+            "head2.output": "board/group[1]/sram",
+            "head2.pos.transpose": "board/group[1]/sram",
+            "head2.pos_query.mm": "board/group[1]/sram",
+            "head2.pos_query.reshape": "board/group[1]/sram",
+            "head2.pos_scores": "board/group[1]/sram",
+            "head2.query.mm": "board/group[1]/sram",
+            "head2.query.reshape": "board/group[1]/sram",
+            "head2.query.rows": "board/group[1]/sram",
+            "head2.rope": "board/group[1]/sram",
+            "head2.rope.rows": "board/group[1]/sram",
+            "head2.scale": "board/group[1]/sram",
+            "head2.scores": "board/group[1]/sram",
+            "head2.softmax": "board/group[1]/sram",
+            "head3.content_scores": "board/group[1]/sram",
+            "head3.context": "board/group[1]/sram",
+            "head3.latent.transpose": "board/group[1]/sram",
+            "head3.output": "board/group[1]/sram",
+            "head3.pos.transpose": "board/group[1]/sram",
+            "head3.pos_query.mm": "board/group[1]/sram",
+            "head3.pos_query.reshape": "board/group[1]/sram",
+            "head3.pos_scores": "board/group[1]/sram",
+            "head3.query.mm": "board/group[1]/sram",
+            "head3.query.reshape": "board/group[1]/sram",
+            "head3.query.rows": "board/group[1]/sram",
+            "head3.rope": "board/group[1]/sram",
+            "head3.rope.rows": "board/group[1]/sram",
+            "head3.scale": "board/group[1]/sram",
+            "head3.scores": "board/group[1]/sram",
+            "head3.softmax": "board/group[1]/sram",
+            "merge.1": "board/root_sram",
+            "merge.2": "board/root_sram",
+            "merge.3": "board/root_sram",
+            "query.down.mm": "board/root_sram",
+            "query.down.reshape": "board/root_sram",
+            "query.norm": "board/root_sram"
+          },
+          "operator_rules": {},
+          "replicas": [
+            {
+              "destinations": [
+                {
+                  "consumers": [
+                    "head0.latent.transpose",
+                    "head0.context",
+                    "head1.latent.transpose",
+                    "head1.context"
+                  ],
+                  "memory": "board/group[0]/sram",
+                  "tensor": "replica.latent_kv.0"
+                },
+                {
+                  "consumers": [
+                    "head2.latent.transpose",
+                    "head2.context",
+                    "head3.latent.transpose",
+                    "head3.context"
+                  ],
+                  "memory": "board/group[1]/sram",
+                  "tensor": "replica.latent_kv.1"
+                }
+              ],
+              "id": "latent_kv",
+              "multicast": true,
+              "source": "latent_kv"
+            },
+            {
+              "destinations": [
+                {
+                  "consumers": [
+                    "head0.pos.transpose",
+                    "head1.pos.transpose"
+                  ],
+                  "memory": "board/group[0]/sram",
+                  "tensor": "replica.pos_key.0"
+                },
+                {
+                  "consumers": [
+                    "head2.pos.transpose",
+                    "head3.pos.transpose"
+                  ],
+                  "memory": "board/group[1]/sram",
+                  "tensor": "replica.pos_key.1"
+                }
+              ],
+              "id": "pos_key",
+              "multicast": true,
+              "source": "pos_key"
+            }
+          ],
+          "rules": {
+            "matmul": {
+              "id": "matmul.tiled",
+              "options": {
+                "tiles": {
+                  "k": 3,
+                  "m": 2,
+                  "n": 4
+                }
+              },
+              "version": "1"
+            }
+          },
+          "storage": {
+            "W_DQ": "board/dram",
+            "X": "board/dram",
+            "head0.WQK": "board/dram",
+            "head0.WQR": "board/dram",
+            "head0.WVO": "board/dram",
+            "head1.WQK": "board/dram",
+            "head1.WQR": "board/dram",
+            "head1.WVO": "board/dram",
+            "head2.WQK": "board/dram",
+            "head2.WQR": "board/dram",
+            "head2.WVO": "board/dram",
+            "head3.WQK": "board/dram",
+            "head3.WQR": "board/dram",
+            "head3.WVO": "board/dram",
+            "latent_kv": "board/dram",
+            "pos_key": "board/dram",
+            "q_gamma": "board/dram",
+            "rope_cos": "board/dram",
+            "rope_sin": "board/dram"
+          }
+        },
+        "template": "compile_graph_v4"
+      },
+      "topology": {
+        "compute_storage": {
+          "board/group[0]/tile[0]/sm": "board/group[0]/sram",
+          "board/group[0]/tile[1]/sm": "board/group[0]/sram",
+          "board/group[1]/tile[0]/sm": "board/group[1]/sram",
+          "board/group[1]/tile[1]/sm": "board/group[1]/sram"
+        },
+        "dram": "board/dram",
+        "groups": {
+          "group0": {
+            "computes": [
+              "board/group[0]/tile[0]/sm",
+              "board/group[0]/tile[1]/sm"
+            ],
+            "storage": {
+              "board/group[0]/tile[0]/sm": "board/group[0]/sram",
+              "board/group[0]/tile[1]/sm": "board/group[0]/sram"
+            }
+          },
+          "group1": {
+            "computes": [
+              "board/group[1]/tile[0]/sm",
+              "board/group[1]/tile[1]/sm"
+            ],
+            "storage": {
+              "board/group[1]/tile[0]/sm": "board/group[1]/sram",
+              "board/group[1]/tile[1]/sm": "board/group[1]/sram"
+            }
+          }
+        },
+        "root_compute": "board/root/sm",
+        "root_memory": "board/root_sram",
+        "schema": "arch-explorer.shared-memory-topology.v1",
+        "shared": true,
+        "source": "explicit synthetic grouped storage/tree service"
+      }
+    },
+    "grouped_unicast": {
+      "adf": {
+        "elements": [
+          {
+            "component": "dram",
+            "name": "dram",
+            "params": {
+              "bandwidth": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B/ns",
+                "value": 16.0
+              },
+              "capacity": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B",
+                "value": 67108864
+              },
+              "latency": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "ns",
+                "value": 4.0
+              },
+              "technology": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "1",
+                "value": "hbm"
+              }
+            },
+            "type": "point"
+          },
+          {
+            "component": "sram",
+            "name": "root_sram",
+            "params": {
+              "bandwidth": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B/ns",
+                "value": 16.0
+              },
+              "capacity": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B",
+                "value": 32768
+              },
+              "latency": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "ns",
+                "value": 1.0
+              }
+            },
+            "type": "point"
+          },
+          {
+            "elements": [
+              {
+                "component": "sm",
+                "implementation": {
+                  "id": "sm.events",
+                  "params": {
+                    "clock_ghz": {
+                      "source": "explicit synthetic grouped storage/tree service",
+                      "unit": "GHz",
+                      "value": 1.0
+                    },
+                    "lanes": {
+                      "source": "explicit synthetic grouped storage/tree service",
+                      "unit": "count",
+                      "value": 8
+                    },
+                    "sfu_lanes": {
+                      "source": "explicit synthetic grouped storage/tree service",
+                      "unit": "count",
+                      "value": 1
+                    }
+                  },
+                  "version": "1"
+                },
+                "name": "sm",
+                "params": {
+                  "precision": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "1",
+                    "value": "fp32"
+                  }
+                },
+                "type": "point"
+              }
+            ],
+            "name": "root",
+            "networks": [
+              {
+                "component": "multicast_tree",
+                "name": "tree",
+                "params": {
+                  "hop_latency": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "ns",
+                    "value": 1.0
+                  },
+                  "link_bandwidth": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "B/ns",
+                    "value": 16.0
+                  },
+                  "port_bandwidth": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "B/ns",
+                    "value": 16.0
+                  }
+                },
+                "type": "point"
+              }
+            ],
+            "type": "matrix"
+          },
+          {
+            "elements": [
+              {
+                "component": "sram",
+                "name": "sram",
+                "params": {
+                  "bandwidth": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "B/ns",
+                    "value": 16.0
+                  },
+                  "capacity": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "B",
+                    "value": 32768
+                  },
+                  "latency": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "ns",
+                    "value": 1.0
+                  }
+                },
+                "type": "point"
+              },
+              {
+                "elements": [
+                  {
+                    "component": "sm",
+                    "implementation": {
+                      "id": "sm.events",
+                      "params": {
+                        "clock_ghz": {
+                          "source": "explicit synthetic grouped storage/tree service",
+                          "unit": "GHz",
+                          "value": 1.0
+                        },
+                        "lanes": {
+                          "source": "explicit synthetic grouped storage/tree service",
+                          "unit": "count",
+                          "value": 8
+                        },
+                        "sfu_lanes": {
+                          "source": "explicit synthetic grouped storage/tree service",
+                          "unit": "count",
+                          "value": 1
+                        }
+                      },
+                      "version": "1"
+                    },
+                    "name": "sm",
+                    "params": {
+                      "precision": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "1",
+                        "value": "fp32"
+                      }
+                    },
+                    "type": "point"
+                  }
+                ],
+                "name": "tile",
+                "networks": [
+                  {
+                    "component": "multicast_tree",
+                    "name": "tree",
+                    "params": {
+                      "hop_latency": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "ns",
+                        "value": 1.0
+                      },
+                      "link_bandwidth": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "B/ns",
+                        "value": 16.0
+                      },
+                      "port_bandwidth": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "B/ns",
+                        "value": 16.0
+                      }
+                    },
+                    "type": "point"
+                  }
+                ],
+                "repeat": 2,
+                "type": "matrix"
+              }
+            ],
+            "name": "group",
+            "networks": [
+              {
+                "component": "multicast_tree",
+                "name": "tree",
+                "params": {
+                  "hop_latency": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "ns",
+                    "value": 1.0
+                  },
+                  "link_bandwidth": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "B/ns",
+                    "value": 16.0
+                  },
+                  "port_bandwidth": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "B/ns",
+                    "value": 16.0
+                  }
+                },
+                "type": "point"
+              }
+            ],
+            "repeat": 2,
+            "type": "matrix"
+          }
+        ],
+        "name": "board",
+        "networks": [
+          {
+            "component": "multicast_tree",
+            "name": "tree",
+            "params": {
+              "hop_latency": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "ns",
+                "value": 1.0
+              },
+              "link_bandwidth": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B/ns",
+                "value": 16.0
+              },
+              "port_bandwidth": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B/ns",
+                "value": 16.0
+              }
+            },
+            "type": "point"
+          }
+        ],
+        "type": "matrix"
+      },
+      "mapping": {
+        "params": {
+          "compute": {
+            "Y": "board/root/sm",
+            "head0.content_scores": "board/group[0]/tile[0]/sm",
+            "head0.context": "board/group[0]/tile[0]/sm",
+            "head0.latent.transpose": "board/group[0]/tile[0]/sm",
+            "head0.output": "board/group[0]/tile[0]/sm",
+            "head0.pos.transpose": "board/group[0]/tile[0]/sm",
+            "head0.pos_query.mm": "board/group[0]/tile[0]/sm",
+            "head0.pos_query.reshape": "board/group[0]/tile[0]/sm",
+            "head0.pos_scores": "board/group[0]/tile[0]/sm",
+            "head0.query.mm": "board/group[0]/tile[0]/sm",
+            "head0.query.reshape": "board/group[0]/tile[0]/sm",
+            "head0.query.rows": "board/group[0]/tile[0]/sm",
+            "head0.rope": "board/group[0]/tile[0]/sm",
+            "head0.rope.rows": "board/group[0]/tile[0]/sm",
+            "head0.scale": "board/group[0]/tile[0]/sm",
+            "head0.scores": "board/group[0]/tile[0]/sm",
+            "head0.softmax": "board/group[0]/tile[0]/sm",
+            "head1.content_scores": "board/group[0]/tile[1]/sm",
+            "head1.context": "board/group[0]/tile[1]/sm",
+            "head1.latent.transpose": "board/group[0]/tile[1]/sm",
+            "head1.output": "board/group[0]/tile[1]/sm",
+            "head1.pos.transpose": "board/group[0]/tile[1]/sm",
+            "head1.pos_query.mm": "board/group[0]/tile[1]/sm",
+            "head1.pos_query.reshape": "board/group[0]/tile[1]/sm",
+            "head1.pos_scores": "board/group[0]/tile[1]/sm",
+            "head1.query.mm": "board/group[0]/tile[1]/sm",
+            "head1.query.reshape": "board/group[0]/tile[1]/sm",
+            "head1.query.rows": "board/group[0]/tile[1]/sm",
+            "head1.rope": "board/group[0]/tile[1]/sm",
+            "head1.rope.rows": "board/group[0]/tile[1]/sm",
+            "head1.scale": "board/group[0]/tile[1]/sm",
+            "head1.scores": "board/group[0]/tile[1]/sm",
+            "head1.softmax": "board/group[0]/tile[1]/sm",
+            "head2.content_scores": "board/group[1]/tile[0]/sm",
+            "head2.context": "board/group[1]/tile[0]/sm",
+            "head2.latent.transpose": "board/group[1]/tile[0]/sm",
+            "head2.output": "board/group[1]/tile[0]/sm",
+            "head2.pos.transpose": "board/group[1]/tile[0]/sm",
+            "head2.pos_query.mm": "board/group[1]/tile[0]/sm",
+            "head2.pos_query.reshape": "board/group[1]/tile[0]/sm",
+            "head2.pos_scores": "board/group[1]/tile[0]/sm",
+            "head2.query.mm": "board/group[1]/tile[0]/sm",
+            "head2.query.reshape": "board/group[1]/tile[0]/sm",
+            "head2.query.rows": "board/group[1]/tile[0]/sm",
+            "head2.rope": "board/group[1]/tile[0]/sm",
+            "head2.rope.rows": "board/group[1]/tile[0]/sm",
+            "head2.scale": "board/group[1]/tile[0]/sm",
+            "head2.scores": "board/group[1]/tile[0]/sm",
+            "head2.softmax": "board/group[1]/tile[0]/sm",
+            "head3.content_scores": "board/group[1]/tile[1]/sm",
+            "head3.context": "board/group[1]/tile[1]/sm",
+            "head3.latent.transpose": "board/group[1]/tile[1]/sm",
+            "head3.output": "board/group[1]/tile[1]/sm",
+            "head3.pos.transpose": "board/group[1]/tile[1]/sm",
+            "head3.pos_query.mm": "board/group[1]/tile[1]/sm",
+            "head3.pos_query.reshape": "board/group[1]/tile[1]/sm",
+            "head3.pos_scores": "board/group[1]/tile[1]/sm",
+            "head3.query.mm": "board/group[1]/tile[1]/sm",
+            "head3.query.reshape": "board/group[1]/tile[1]/sm",
+            "head3.query.rows": "board/group[1]/tile[1]/sm",
+            "head3.rope": "board/group[1]/tile[1]/sm",
+            "head3.rope.rows": "board/group[1]/tile[1]/sm",
+            "head3.scale": "board/group[1]/tile[1]/sm",
+            "head3.scores": "board/group[1]/tile[1]/sm",
+            "head3.softmax": "board/group[1]/tile[1]/sm",
+            "merge.1": "board/root/sm",
+            "merge.2": "board/root/sm",
+            "merge.3": "board/root/sm",
+            "query.down.mm": "board/root/sm",
+            "query.down.reshape": "board/root/sm",
+            "query.norm": "board/root/sm"
+          },
+          "memory": {
+            "Y": "board/root_sram",
+            "head0.content_scores": "board/group[0]/sram",
+            "head0.context": "board/group[0]/sram",
+            "head0.latent.transpose": "board/group[0]/sram",
+            "head0.output": "board/group[0]/sram",
+            "head0.pos.transpose": "board/group[0]/sram",
+            "head0.pos_query.mm": "board/group[0]/sram",
+            "head0.pos_query.reshape": "board/group[0]/sram",
+            "head0.pos_scores": "board/group[0]/sram",
+            "head0.query.mm": "board/group[0]/sram",
+            "head0.query.reshape": "board/group[0]/sram",
+            "head0.query.rows": "board/group[0]/sram",
+            "head0.rope": "board/group[0]/sram",
+            "head0.rope.rows": "board/group[0]/sram",
+            "head0.scale": "board/group[0]/sram",
+            "head0.scores": "board/group[0]/sram",
+            "head0.softmax": "board/group[0]/sram",
+            "head1.content_scores": "board/group[0]/sram",
+            "head1.context": "board/group[0]/sram",
+            "head1.latent.transpose": "board/group[0]/sram",
+            "head1.output": "board/group[0]/sram",
+            "head1.pos.transpose": "board/group[0]/sram",
+            "head1.pos_query.mm": "board/group[0]/sram",
+            "head1.pos_query.reshape": "board/group[0]/sram",
+            "head1.pos_scores": "board/group[0]/sram",
+            "head1.query.mm": "board/group[0]/sram",
+            "head1.query.reshape": "board/group[0]/sram",
+            "head1.query.rows": "board/group[0]/sram",
+            "head1.rope": "board/group[0]/sram",
+            "head1.rope.rows": "board/group[0]/sram",
+            "head1.scale": "board/group[0]/sram",
+            "head1.scores": "board/group[0]/sram",
+            "head1.softmax": "board/group[0]/sram",
+            "head2.content_scores": "board/group[1]/sram",
+            "head2.context": "board/group[1]/sram",
+            "head2.latent.transpose": "board/group[1]/sram",
+            "head2.output": "board/group[1]/sram",
+            "head2.pos.transpose": "board/group[1]/sram",
+            "head2.pos_query.mm": "board/group[1]/sram",
+            "head2.pos_query.reshape": "board/group[1]/sram",
+            "head2.pos_scores": "board/group[1]/sram",
+            "head2.query.mm": "board/group[1]/sram",
+            "head2.query.reshape": "board/group[1]/sram",
+            "head2.query.rows": "board/group[1]/sram",
+            "head2.rope": "board/group[1]/sram",
+            "head2.rope.rows": "board/group[1]/sram",
+            "head2.scale": "board/group[1]/sram",
+            "head2.scores": "board/group[1]/sram",
+            "head2.softmax": "board/group[1]/sram",
+            "head3.content_scores": "board/group[1]/sram",
+            "head3.context": "board/group[1]/sram",
+            "head3.latent.transpose": "board/group[1]/sram",
+            "head3.output": "board/group[1]/sram",
+            "head3.pos.transpose": "board/group[1]/sram",
+            "head3.pos_query.mm": "board/group[1]/sram",
+            "head3.pos_query.reshape": "board/group[1]/sram",
+            "head3.pos_scores": "board/group[1]/sram",
+            "head3.query.mm": "board/group[1]/sram",
+            "head3.query.reshape": "board/group[1]/sram",
+            "head3.query.rows": "board/group[1]/sram",
+            "head3.rope": "board/group[1]/sram",
+            "head3.rope.rows": "board/group[1]/sram",
+            "head3.scale": "board/group[1]/sram",
+            "head3.scores": "board/group[1]/sram",
+            "head3.softmax": "board/group[1]/sram",
+            "merge.1": "board/root_sram",
+            "merge.2": "board/root_sram",
+            "merge.3": "board/root_sram",
+            "query.down.mm": "board/root_sram",
+            "query.down.reshape": "board/root_sram",
+            "query.norm": "board/root_sram"
+          },
+          "operator_rules": {},
+          "replicas": [
+            {
+              "destinations": [
+                {
+                  "consumers": [
+                    "head0.latent.transpose",
+                    "head0.context",
+                    "head1.latent.transpose",
+                    "head1.context"
+                  ],
+                  "memory": "board/group[0]/sram",
+                  "tensor": "replica.latent_kv.0"
+                },
+                {
+                  "consumers": [
+                    "head2.latent.transpose",
+                    "head2.context",
+                    "head3.latent.transpose",
+                    "head3.context"
+                  ],
+                  "memory": "board/group[1]/sram",
+                  "tensor": "replica.latent_kv.1"
+                }
+              ],
+              "id": "latent_kv",
+              "multicast": false,
+              "source": "latent_kv"
+            },
+            {
+              "destinations": [
+                {
+                  "consumers": [
+                    "head0.pos.transpose",
+                    "head1.pos.transpose"
+                  ],
+                  "memory": "board/group[0]/sram",
+                  "tensor": "replica.pos_key.0"
+                },
+                {
+                  "consumers": [
+                    "head2.pos.transpose",
+                    "head3.pos.transpose"
+                  ],
+                  "memory": "board/group[1]/sram",
+                  "tensor": "replica.pos_key.1"
+                }
+              ],
+              "id": "pos_key",
+              "multicast": false,
+              "source": "pos_key"
+            }
+          ],
+          "rules": {
+            "matmul": {
+              "id": "matmul.tiled",
+              "options": {
+                "tiles": {
+                  "k": 3,
+                  "m": 2,
+                  "n": 4
+                }
+              },
+              "version": "1"
+            }
+          },
+          "storage": {
+            "W_DQ": "board/dram",
+            "X": "board/dram",
+            "head0.WQK": "board/dram",
+            "head0.WQR": "board/dram",
+            "head0.WVO": "board/dram",
+            "head1.WQK": "board/dram",
+            "head1.WQR": "board/dram",
+            "head1.WVO": "board/dram",
+            "head2.WQK": "board/dram",
+            "head2.WQR": "board/dram",
+            "head2.WVO": "board/dram",
+            "head3.WQK": "board/dram",
+            "head3.WQR": "board/dram",
+            "head3.WVO": "board/dram",
+            "latent_kv": "board/dram",
+            "pos_key": "board/dram",
+            "q_gamma": "board/dram",
+            "rope_cos": "board/dram",
+            "rope_sin": "board/dram"
+          }
+        },
+        "template": "compile_graph_v4"
+      },
+      "topology": {
+        "compute_storage": {
+          "board/group[0]/tile[0]/sm": "board/group[0]/sram",
+          "board/group[0]/tile[1]/sm": "board/group[0]/sram",
+          "board/group[1]/tile[0]/sm": "board/group[1]/sram",
+          "board/group[1]/tile[1]/sm": "board/group[1]/sram"
+        },
+        "dram": "board/dram",
+        "groups": {
+          "group0": {
+            "computes": [
+              "board/group[0]/tile[0]/sm",
+              "board/group[0]/tile[1]/sm"
+            ],
+            "storage": {
+              "board/group[0]/tile[0]/sm": "board/group[0]/sram",
+              "board/group[0]/tile[1]/sm": "board/group[0]/sram"
+            }
+          },
+          "group1": {
+            "computes": [
+              "board/group[1]/tile[0]/sm",
+              "board/group[1]/tile[1]/sm"
+            ],
+            "storage": {
+              "board/group[1]/tile[0]/sm": "board/group[1]/sram",
+              "board/group[1]/tile[1]/sm": "board/group[1]/sram"
+            }
+          }
+        },
+        "root_compute": "board/root/sm",
+        "root_memory": "board/root_sram",
+        "schema": "arch-explorer.shared-memory-topology.v1",
+        "shared": true,
+        "source": "explicit synthetic grouped storage/tree service"
+      }
+    },
+    "private_multicast": {
+      "adf": {
+        "elements": [
+          {
+            "component": "dram",
+            "name": "dram",
+            "params": {
+              "bandwidth": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B/ns",
+                "value": 16.0
+              },
+              "capacity": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B",
+                "value": 67108864
+              },
+              "latency": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "ns",
+                "value": 4.0
+              },
+              "technology": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "1",
+                "value": "hbm"
+              }
+            },
+            "type": "point"
+          },
+          {
+            "component": "sram",
+            "name": "root_sram",
+            "params": {
+              "bandwidth": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B/ns",
+                "value": 16.0
+              },
+              "capacity": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B",
+                "value": 32768
+              },
+              "latency": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "ns",
+                "value": 1.0
+              }
+            },
+            "type": "point"
+          },
+          {
+            "elements": [
+              {
+                "component": "sm",
+                "implementation": {
+                  "id": "sm.events",
+                  "params": {
+                    "clock_ghz": {
+                      "source": "explicit synthetic grouped storage/tree service",
+                      "unit": "GHz",
+                      "value": 1.0
+                    },
+                    "lanes": {
+                      "source": "explicit synthetic grouped storage/tree service",
+                      "unit": "count",
+                      "value": 8
+                    },
+                    "sfu_lanes": {
+                      "source": "explicit synthetic grouped storage/tree service",
+                      "unit": "count",
+                      "value": 1
+                    }
+                  },
+                  "version": "1"
+                },
+                "name": "sm",
+                "params": {
+                  "precision": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "1",
+                    "value": "fp32"
+                  }
+                },
+                "type": "point"
+              }
+            ],
+            "name": "root",
+            "networks": [
+              {
+                "component": "multicast_tree",
+                "name": "tree",
+                "params": {
+                  "hop_latency": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "ns",
+                    "value": 1.0
+                  },
+                  "link_bandwidth": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "B/ns",
+                    "value": 16.0
+                  },
+                  "port_bandwidth": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "B/ns",
+                    "value": 16.0
+                  }
+                },
+                "type": "point"
+              }
+            ],
+            "type": "matrix"
+          },
+          {
+            "elements": [
+              {
+                "elements": [
+                  {
+                    "component": "sm",
+                    "implementation": {
+                      "id": "sm.events",
+                      "params": {
+                        "clock_ghz": {
+                          "source": "explicit synthetic grouped storage/tree service",
+                          "unit": "GHz",
+                          "value": 1.0
+                        },
+                        "lanes": {
+                          "source": "explicit synthetic grouped storage/tree service",
+                          "unit": "count",
+                          "value": 8
+                        },
+                        "sfu_lanes": {
+                          "source": "explicit synthetic grouped storage/tree service",
+                          "unit": "count",
+                          "value": 1
+                        }
+                      },
+                      "version": "1"
+                    },
+                    "name": "sm",
+                    "params": {
+                      "precision": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "1",
+                        "value": "fp32"
+                      }
+                    },
+                    "type": "point"
+                  },
+                  {
+                    "component": "sram",
+                    "name": "sram",
+                    "params": {
+                      "bandwidth": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "B/ns",
+                        "value": 16.0
+                      },
+                      "capacity": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "B",
+                        "value": 32768
+                      },
+                      "latency": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "ns",
+                        "value": 1.0
+                      }
+                    },
+                    "type": "point"
+                  }
+                ],
+                "name": "tile",
+                "networks": [
+                  {
+                    "component": "multicast_tree",
+                    "name": "tree",
+                    "params": {
+                      "hop_latency": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "ns",
+                        "value": 1.0
+                      },
+                      "link_bandwidth": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "B/ns",
+                        "value": 16.0
+                      },
+                      "port_bandwidth": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "B/ns",
+                        "value": 16.0
+                      }
+                    },
+                    "type": "point"
+                  }
+                ],
+                "repeat": 2,
+                "type": "matrix"
+              }
+            ],
+            "name": "group",
+            "networks": [
+              {
+                "component": "multicast_tree",
+                "name": "tree",
+                "params": {
+                  "hop_latency": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "ns",
+                    "value": 1.0
+                  },
+                  "link_bandwidth": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "B/ns",
+                    "value": 16.0
+                  },
+                  "port_bandwidth": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "B/ns",
+                    "value": 16.0
+                  }
+                },
+                "type": "point"
+              }
+            ],
+            "repeat": 2,
+            "type": "matrix"
+          }
+        ],
+        "name": "board",
+        "networks": [
+          {
+            "component": "multicast_tree",
+            "name": "tree",
+            "params": {
+              "hop_latency": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "ns",
+                "value": 1.0
+              },
+              "link_bandwidth": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B/ns",
+                "value": 16.0
+              },
+              "port_bandwidth": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B/ns",
+                "value": 16.0
+              }
+            },
+            "type": "point"
+          }
+        ],
+        "type": "matrix"
+      },
+      "mapping": {
+        "params": {
+          "compute": {
+            "Y": "board/root/sm",
+            "head0.content_scores": "board/group[0]/tile[0]/sm",
+            "head0.context": "board/group[0]/tile[0]/sm",
+            "head0.latent.transpose": "board/group[0]/tile[0]/sm",
+            "head0.output": "board/group[0]/tile[0]/sm",
+            "head0.pos.transpose": "board/group[0]/tile[0]/sm",
+            "head0.pos_query.mm": "board/group[0]/tile[0]/sm",
+            "head0.pos_query.reshape": "board/group[0]/tile[0]/sm",
+            "head0.pos_scores": "board/group[0]/tile[0]/sm",
+            "head0.query.mm": "board/group[0]/tile[0]/sm",
+            "head0.query.reshape": "board/group[0]/tile[0]/sm",
+            "head0.query.rows": "board/group[0]/tile[0]/sm",
+            "head0.rope": "board/group[0]/tile[0]/sm",
+            "head0.rope.rows": "board/group[0]/tile[0]/sm",
+            "head0.scale": "board/group[0]/tile[0]/sm",
+            "head0.scores": "board/group[0]/tile[0]/sm",
+            "head0.softmax": "board/group[0]/tile[0]/sm",
+            "head1.content_scores": "board/group[0]/tile[1]/sm",
+            "head1.context": "board/group[0]/tile[1]/sm",
+            "head1.latent.transpose": "board/group[0]/tile[1]/sm",
+            "head1.output": "board/group[0]/tile[1]/sm",
+            "head1.pos.transpose": "board/group[0]/tile[1]/sm",
+            "head1.pos_query.mm": "board/group[0]/tile[1]/sm",
+            "head1.pos_query.reshape": "board/group[0]/tile[1]/sm",
+            "head1.pos_scores": "board/group[0]/tile[1]/sm",
+            "head1.query.mm": "board/group[0]/tile[1]/sm",
+            "head1.query.reshape": "board/group[0]/tile[1]/sm",
+            "head1.query.rows": "board/group[0]/tile[1]/sm",
+            "head1.rope": "board/group[0]/tile[1]/sm",
+            "head1.rope.rows": "board/group[0]/tile[1]/sm",
+            "head1.scale": "board/group[0]/tile[1]/sm",
+            "head1.scores": "board/group[0]/tile[1]/sm",
+            "head1.softmax": "board/group[0]/tile[1]/sm",
+            "head2.content_scores": "board/group[1]/tile[0]/sm",
+            "head2.context": "board/group[1]/tile[0]/sm",
+            "head2.latent.transpose": "board/group[1]/tile[0]/sm",
+            "head2.output": "board/group[1]/tile[0]/sm",
+            "head2.pos.transpose": "board/group[1]/tile[0]/sm",
+            "head2.pos_query.mm": "board/group[1]/tile[0]/sm",
+            "head2.pos_query.reshape": "board/group[1]/tile[0]/sm",
+            "head2.pos_scores": "board/group[1]/tile[0]/sm",
+            "head2.query.mm": "board/group[1]/tile[0]/sm",
+            "head2.query.reshape": "board/group[1]/tile[0]/sm",
+            "head2.query.rows": "board/group[1]/tile[0]/sm",
+            "head2.rope": "board/group[1]/tile[0]/sm",
+            "head2.rope.rows": "board/group[1]/tile[0]/sm",
+            "head2.scale": "board/group[1]/tile[0]/sm",
+            "head2.scores": "board/group[1]/tile[0]/sm",
+            "head2.softmax": "board/group[1]/tile[0]/sm",
+            "head3.content_scores": "board/group[1]/tile[1]/sm",
+            "head3.context": "board/group[1]/tile[1]/sm",
+            "head3.latent.transpose": "board/group[1]/tile[1]/sm",
+            "head3.output": "board/group[1]/tile[1]/sm",
+            "head3.pos.transpose": "board/group[1]/tile[1]/sm",
+            "head3.pos_query.mm": "board/group[1]/tile[1]/sm",
+            "head3.pos_query.reshape": "board/group[1]/tile[1]/sm",
+            "head3.pos_scores": "board/group[1]/tile[1]/sm",
+            "head3.query.mm": "board/group[1]/tile[1]/sm",
+            "head3.query.reshape": "board/group[1]/tile[1]/sm",
+            "head3.query.rows": "board/group[1]/tile[1]/sm",
+            "head3.rope": "board/group[1]/tile[1]/sm",
+            "head3.rope.rows": "board/group[1]/tile[1]/sm",
+            "head3.scale": "board/group[1]/tile[1]/sm",
+            "head3.scores": "board/group[1]/tile[1]/sm",
+            "head3.softmax": "board/group[1]/tile[1]/sm",
+            "merge.1": "board/root/sm",
+            "merge.2": "board/root/sm",
+            "merge.3": "board/root/sm",
+            "query.down.mm": "board/root/sm",
+            "query.down.reshape": "board/root/sm",
+            "query.norm": "board/root/sm"
+          },
+          "memory": {
+            "Y": "board/root_sram",
+            "head0.content_scores": "board/group[0]/tile[0]/sram",
+            "head0.context": "board/group[0]/tile[0]/sram",
+            "head0.latent.transpose": "board/group[0]/tile[0]/sram",
+            "head0.output": "board/group[0]/tile[0]/sram",
+            "head0.pos.transpose": "board/group[0]/tile[0]/sram",
+            "head0.pos_query.mm": "board/group[0]/tile[0]/sram",
+            "head0.pos_query.reshape": "board/group[0]/tile[0]/sram",
+            "head0.pos_scores": "board/group[0]/tile[0]/sram",
+            "head0.query.mm": "board/group[0]/tile[0]/sram",
+            "head0.query.reshape": "board/group[0]/tile[0]/sram",
+            "head0.query.rows": "board/group[0]/tile[0]/sram",
+            "head0.rope": "board/group[0]/tile[0]/sram",
+            "head0.rope.rows": "board/group[0]/tile[0]/sram",
+            "head0.scale": "board/group[0]/tile[0]/sram",
+            "head0.scores": "board/group[0]/tile[0]/sram",
+            "head0.softmax": "board/group[0]/tile[0]/sram",
+            "head1.content_scores": "board/group[0]/tile[1]/sram",
+            "head1.context": "board/group[0]/tile[1]/sram",
+            "head1.latent.transpose": "board/group[0]/tile[1]/sram",
+            "head1.output": "board/group[0]/tile[1]/sram",
+            "head1.pos.transpose": "board/group[0]/tile[1]/sram",
+            "head1.pos_query.mm": "board/group[0]/tile[1]/sram",
+            "head1.pos_query.reshape": "board/group[0]/tile[1]/sram",
+            "head1.pos_scores": "board/group[0]/tile[1]/sram",
+            "head1.query.mm": "board/group[0]/tile[1]/sram",
+            "head1.query.reshape": "board/group[0]/tile[1]/sram",
+            "head1.query.rows": "board/group[0]/tile[1]/sram",
+            "head1.rope": "board/group[0]/tile[1]/sram",
+            "head1.rope.rows": "board/group[0]/tile[1]/sram",
+            "head1.scale": "board/group[0]/tile[1]/sram",
+            "head1.scores": "board/group[0]/tile[1]/sram",
+            "head1.softmax": "board/group[0]/tile[1]/sram",
+            "head2.content_scores": "board/group[1]/tile[0]/sram",
+            "head2.context": "board/group[1]/tile[0]/sram",
+            "head2.latent.transpose": "board/group[1]/tile[0]/sram",
+            "head2.output": "board/group[1]/tile[0]/sram",
+            "head2.pos.transpose": "board/group[1]/tile[0]/sram",
+            "head2.pos_query.mm": "board/group[1]/tile[0]/sram",
+            "head2.pos_query.reshape": "board/group[1]/tile[0]/sram",
+            "head2.pos_scores": "board/group[1]/tile[0]/sram",
+            "head2.query.mm": "board/group[1]/tile[0]/sram",
+            "head2.query.reshape": "board/group[1]/tile[0]/sram",
+            "head2.query.rows": "board/group[1]/tile[0]/sram",
+            "head2.rope": "board/group[1]/tile[0]/sram",
+            "head2.rope.rows": "board/group[1]/tile[0]/sram",
+            "head2.scale": "board/group[1]/tile[0]/sram",
+            "head2.scores": "board/group[1]/tile[0]/sram",
+            "head2.softmax": "board/group[1]/tile[0]/sram",
+            "head3.content_scores": "board/group[1]/tile[1]/sram",
+            "head3.context": "board/group[1]/tile[1]/sram",
+            "head3.latent.transpose": "board/group[1]/tile[1]/sram",
+            "head3.output": "board/group[1]/tile[1]/sram",
+            "head3.pos.transpose": "board/group[1]/tile[1]/sram",
+            "head3.pos_query.mm": "board/group[1]/tile[1]/sram",
+            "head3.pos_query.reshape": "board/group[1]/tile[1]/sram",
+            "head3.pos_scores": "board/group[1]/tile[1]/sram",
+            "head3.query.mm": "board/group[1]/tile[1]/sram",
+            "head3.query.reshape": "board/group[1]/tile[1]/sram",
+            "head3.query.rows": "board/group[1]/tile[1]/sram",
+            "head3.rope": "board/group[1]/tile[1]/sram",
+            "head3.rope.rows": "board/group[1]/tile[1]/sram",
+            "head3.scale": "board/group[1]/tile[1]/sram",
+            "head3.scores": "board/group[1]/tile[1]/sram",
+            "head3.softmax": "board/group[1]/tile[1]/sram",
+            "merge.1": "board/root_sram",
+            "merge.2": "board/root_sram",
+            "merge.3": "board/root_sram",
+            "query.down.mm": "board/root_sram",
+            "query.down.reshape": "board/root_sram",
+            "query.norm": "board/root_sram"
+          },
+          "operator_rules": {},
+          "replicas": [
+            {
+              "destinations": [
+                {
+                  "consumers": [
+                    "head0.latent.transpose",
+                    "head0.context"
+                  ],
+                  "memory": "board/group[0]/tile[0]/sram",
+                  "tensor": "replica.latent_kv.0"
+                },
+                {
+                  "consumers": [
+                    "head1.latent.transpose",
+                    "head1.context"
+                  ],
+                  "memory": "board/group[0]/tile[1]/sram",
+                  "tensor": "replica.latent_kv.1"
+                },
+                {
+                  "consumers": [
+                    "head2.latent.transpose",
+                    "head2.context"
+                  ],
+                  "memory": "board/group[1]/tile[0]/sram",
+                  "tensor": "replica.latent_kv.2"
+                },
+                {
+                  "consumers": [
+                    "head3.latent.transpose",
+                    "head3.context"
+                  ],
+                  "memory": "board/group[1]/tile[1]/sram",
+                  "tensor": "replica.latent_kv.3"
+                }
+              ],
+              "id": "latent_kv",
+              "multicast": true,
+              "source": "latent_kv"
+            },
+            {
+              "destinations": [
+                {
+                  "consumers": [
+                    "head0.pos.transpose"
+                  ],
+                  "memory": "board/group[0]/tile[0]/sram",
+                  "tensor": "replica.pos_key.0"
+                },
+                {
+                  "consumers": [
+                    "head1.pos.transpose"
+                  ],
+                  "memory": "board/group[0]/tile[1]/sram",
+                  "tensor": "replica.pos_key.1"
+                },
+                {
+                  "consumers": [
+                    "head2.pos.transpose"
+                  ],
+                  "memory": "board/group[1]/tile[0]/sram",
+                  "tensor": "replica.pos_key.2"
+                },
+                {
+                  "consumers": [
+                    "head3.pos.transpose"
+                  ],
+                  "memory": "board/group[1]/tile[1]/sram",
+                  "tensor": "replica.pos_key.3"
+                }
+              ],
+              "id": "pos_key",
+              "multicast": true,
+              "source": "pos_key"
+            }
+          ],
+          "rules": {
+            "matmul": {
+              "id": "matmul.tiled",
+              "options": {
+                "tiles": {
+                  "k": 3,
+                  "m": 2,
+                  "n": 4
+                }
+              },
+              "version": "1"
+            }
+          },
+          "storage": {
+            "W_DQ": "board/dram",
+            "X": "board/dram",
+            "head0.WQK": "board/dram",
+            "head0.WQR": "board/dram",
+            "head0.WVO": "board/dram",
+            "head1.WQK": "board/dram",
+            "head1.WQR": "board/dram",
+            "head1.WVO": "board/dram",
+            "head2.WQK": "board/dram",
+            "head2.WQR": "board/dram",
+            "head2.WVO": "board/dram",
+            "head3.WQK": "board/dram",
+            "head3.WQR": "board/dram",
+            "head3.WVO": "board/dram",
+            "latent_kv": "board/dram",
+            "pos_key": "board/dram",
+            "q_gamma": "board/dram",
+            "rope_cos": "board/dram",
+            "rope_sin": "board/dram"
+          }
+        },
+        "template": "compile_graph_v4"
+      },
+      "topology": {
+        "compute_storage": {
+          "board/group[0]/tile[0]/sm": "board/group[0]/tile[0]/sram",
+          "board/group[0]/tile[1]/sm": "board/group[0]/tile[1]/sram",
+          "board/group[1]/tile[0]/sm": "board/group[1]/tile[0]/sram",
+          "board/group[1]/tile[1]/sm": "board/group[1]/tile[1]/sram"
+        },
+        "dram": "board/dram",
+        "groups": {
+          "group0": {
+            "computes": [
+              "board/group[0]/tile[0]/sm",
+              "board/group[0]/tile[1]/sm"
+            ],
+            "storage": {
+              "board/group[0]/tile[0]/sm": "board/group[0]/tile[0]/sram",
+              "board/group[0]/tile[1]/sm": "board/group[0]/tile[1]/sram"
+            }
+          },
+          "group1": {
+            "computes": [
+              "board/group[1]/tile[0]/sm",
+              "board/group[1]/tile[1]/sm"
+            ],
+            "storage": {
+              "board/group[1]/tile[0]/sm": "board/group[1]/tile[0]/sram",
+              "board/group[1]/tile[1]/sm": "board/group[1]/tile[1]/sram"
+            }
+          }
+        },
+        "root_compute": "board/root/sm",
+        "root_memory": "board/root_sram",
+        "schema": "arch-explorer.shared-memory-topology.v1",
+        "shared": false,
+        "source": "explicit synthetic grouped storage/tree service"
+      }
+    },
+    "private_unicast": {
+      "adf": {
+        "elements": [
+          {
+            "component": "dram",
+            "name": "dram",
+            "params": {
+              "bandwidth": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B/ns",
+                "value": 16.0
+              },
+              "capacity": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B",
+                "value": 67108864
+              },
+              "latency": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "ns",
+                "value": 4.0
+              },
+              "technology": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "1",
+                "value": "hbm"
+              }
+            },
+            "type": "point"
+          },
+          {
+            "component": "sram",
+            "name": "root_sram",
+            "params": {
+              "bandwidth": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B/ns",
+                "value": 16.0
+              },
+              "capacity": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B",
+                "value": 32768
+              },
+              "latency": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "ns",
+                "value": 1.0
+              }
+            },
+            "type": "point"
+          },
+          {
+            "elements": [
+              {
+                "component": "sm",
+                "implementation": {
+                  "id": "sm.events",
+                  "params": {
+                    "clock_ghz": {
+                      "source": "explicit synthetic grouped storage/tree service",
+                      "unit": "GHz",
+                      "value": 1.0
+                    },
+                    "lanes": {
+                      "source": "explicit synthetic grouped storage/tree service",
+                      "unit": "count",
+                      "value": 8
+                    },
+                    "sfu_lanes": {
+                      "source": "explicit synthetic grouped storage/tree service",
+                      "unit": "count",
+                      "value": 1
+                    }
+                  },
+                  "version": "1"
+                },
+                "name": "sm",
+                "params": {
+                  "precision": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "1",
+                    "value": "fp32"
+                  }
+                },
+                "type": "point"
+              }
+            ],
+            "name": "root",
+            "networks": [
+              {
+                "component": "multicast_tree",
+                "name": "tree",
+                "params": {
+                  "hop_latency": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "ns",
+                    "value": 1.0
+                  },
+                  "link_bandwidth": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "B/ns",
+                    "value": 16.0
+                  },
+                  "port_bandwidth": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "B/ns",
+                    "value": 16.0
+                  }
+                },
+                "type": "point"
+              }
+            ],
+            "type": "matrix"
+          },
+          {
+            "elements": [
+              {
+                "elements": [
+                  {
+                    "component": "sm",
+                    "implementation": {
+                      "id": "sm.events",
+                      "params": {
+                        "clock_ghz": {
+                          "source": "explicit synthetic grouped storage/tree service",
+                          "unit": "GHz",
+                          "value": 1.0
+                        },
+                        "lanes": {
+                          "source": "explicit synthetic grouped storage/tree service",
+                          "unit": "count",
+                          "value": 8
+                        },
+                        "sfu_lanes": {
+                          "source": "explicit synthetic grouped storage/tree service",
+                          "unit": "count",
+                          "value": 1
+                        }
+                      },
+                      "version": "1"
+                    },
+                    "name": "sm",
+                    "params": {
+                      "precision": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "1",
+                        "value": "fp32"
+                      }
+                    },
+                    "type": "point"
+                  },
+                  {
+                    "component": "sram",
+                    "name": "sram",
+                    "params": {
+                      "bandwidth": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "B/ns",
+                        "value": 16.0
+                      },
+                      "capacity": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "B",
+                        "value": 32768
+                      },
+                      "latency": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "ns",
+                        "value": 1.0
+                      }
+                    },
+                    "type": "point"
+                  }
+                ],
+                "name": "tile",
+                "networks": [
+                  {
+                    "component": "multicast_tree",
+                    "name": "tree",
+                    "params": {
+                      "hop_latency": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "ns",
+                        "value": 1.0
+                      },
+                      "link_bandwidth": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "B/ns",
+                        "value": 16.0
+                      },
+                      "port_bandwidth": {
+                        "source": "explicit synthetic grouped storage/tree service",
+                        "unit": "B/ns",
+                        "value": 16.0
+                      }
+                    },
+                    "type": "point"
+                  }
+                ],
+                "repeat": 2,
+                "type": "matrix"
+              }
+            ],
+            "name": "group",
+            "networks": [
+              {
+                "component": "multicast_tree",
+                "name": "tree",
+                "params": {
+                  "hop_latency": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "ns",
+                    "value": 1.0
+                  },
+                  "link_bandwidth": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "B/ns",
+                    "value": 16.0
+                  },
+                  "port_bandwidth": {
+                    "source": "explicit synthetic grouped storage/tree service",
+                    "unit": "B/ns",
+                    "value": 16.0
+                  }
+                },
+                "type": "point"
+              }
+            ],
+            "repeat": 2,
+            "type": "matrix"
+          }
+        ],
+        "name": "board",
+        "networks": [
+          {
+            "component": "multicast_tree",
+            "name": "tree",
+            "params": {
+              "hop_latency": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "ns",
+                "value": 1.0
+              },
+              "link_bandwidth": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B/ns",
+                "value": 16.0
+              },
+              "port_bandwidth": {
+                "source": "explicit synthetic grouped storage/tree service",
+                "unit": "B/ns",
+                "value": 16.0
+              }
+            },
+            "type": "point"
+          }
+        ],
+        "type": "matrix"
+      },
+      "mapping": {
+        "params": {
+          "compute": {
+            "Y": "board/root/sm",
+            "head0.content_scores": "board/group[0]/tile[0]/sm",
+            "head0.context": "board/group[0]/tile[0]/sm",
+            "head0.latent.transpose": "board/group[0]/tile[0]/sm",
+            "head0.output": "board/group[0]/tile[0]/sm",
+            "head0.pos.transpose": "board/group[0]/tile[0]/sm",
+            "head0.pos_query.mm": "board/group[0]/tile[0]/sm",
+            "head0.pos_query.reshape": "board/group[0]/tile[0]/sm",
+            "head0.pos_scores": "board/group[0]/tile[0]/sm",
+            "head0.query.mm": "board/group[0]/tile[0]/sm",
+            "head0.query.reshape": "board/group[0]/tile[0]/sm",
+            "head0.query.rows": "board/group[0]/tile[0]/sm",
+            "head0.rope": "board/group[0]/tile[0]/sm",
+            "head0.rope.rows": "board/group[0]/tile[0]/sm",
+            "head0.scale": "board/group[0]/tile[0]/sm",
+            "head0.scores": "board/group[0]/tile[0]/sm",
+            "head0.softmax": "board/group[0]/tile[0]/sm",
+            "head1.content_scores": "board/group[0]/tile[1]/sm",
+            "head1.context": "board/group[0]/tile[1]/sm",
+            "head1.latent.transpose": "board/group[0]/tile[1]/sm",
+            "head1.output": "board/group[0]/tile[1]/sm",
+            "head1.pos.transpose": "board/group[0]/tile[1]/sm",
+            "head1.pos_query.mm": "board/group[0]/tile[1]/sm",
+            "head1.pos_query.reshape": "board/group[0]/tile[1]/sm",
+            "head1.pos_scores": "board/group[0]/tile[1]/sm",
+            "head1.query.mm": "board/group[0]/tile[1]/sm",
+            "head1.query.reshape": "board/group[0]/tile[1]/sm",
+            "head1.query.rows": "board/group[0]/tile[1]/sm",
+            "head1.rope": "board/group[0]/tile[1]/sm",
+            "head1.rope.rows": "board/group[0]/tile[1]/sm",
+            "head1.scale": "board/group[0]/tile[1]/sm",
+            "head1.scores": "board/group[0]/tile[1]/sm",
+            "head1.softmax": "board/group[0]/tile[1]/sm",
+            "head2.content_scores": "board/group[1]/tile[0]/sm",
+            "head2.context": "board/group[1]/tile[0]/sm",
+            "head2.latent.transpose": "board/group[1]/tile[0]/sm",
+            "head2.output": "board/group[1]/tile[0]/sm",
+            "head2.pos.transpose": "board/group[1]/tile[0]/sm",
+            "head2.pos_query.mm": "board/group[1]/tile[0]/sm",
+            "head2.pos_query.reshape": "board/group[1]/tile[0]/sm",
+            "head2.pos_scores": "board/group[1]/tile[0]/sm",
+            "head2.query.mm": "board/group[1]/tile[0]/sm",
+            "head2.query.reshape": "board/group[1]/tile[0]/sm",
+            "head2.query.rows": "board/group[1]/tile[0]/sm",
+            "head2.rope": "board/group[1]/tile[0]/sm",
+            "head2.rope.rows": "board/group[1]/tile[0]/sm",
+            "head2.scale": "board/group[1]/tile[0]/sm",
+            "head2.scores": "board/group[1]/tile[0]/sm",
+            "head2.softmax": "board/group[1]/tile[0]/sm",
+            "head3.content_scores": "board/group[1]/tile[1]/sm",
+            "head3.context": "board/group[1]/tile[1]/sm",
+            "head3.latent.transpose": "board/group[1]/tile[1]/sm",
+            "head3.output": "board/group[1]/tile[1]/sm",
+            "head3.pos.transpose": "board/group[1]/tile[1]/sm",
+            "head3.pos_query.mm": "board/group[1]/tile[1]/sm",
+            "head3.pos_query.reshape": "board/group[1]/tile[1]/sm",
+            "head3.pos_scores": "board/group[1]/tile[1]/sm",
+            "head3.query.mm": "board/group[1]/tile[1]/sm",
+            "head3.query.reshape": "board/group[1]/tile[1]/sm",
+            "head3.query.rows": "board/group[1]/tile[1]/sm",
+            "head3.rope": "board/group[1]/tile[1]/sm",
+            "head3.rope.rows": "board/group[1]/tile[1]/sm",
+            "head3.scale": "board/group[1]/tile[1]/sm",
+            "head3.scores": "board/group[1]/tile[1]/sm",
+            "head3.softmax": "board/group[1]/tile[1]/sm",
+            "merge.1": "board/root/sm",
+            "merge.2": "board/root/sm",
+            "merge.3": "board/root/sm",
+            "query.down.mm": "board/root/sm",
+            "query.down.reshape": "board/root/sm",
+            "query.norm": "board/root/sm"
+          },
+          "memory": {
+            "Y": "board/root_sram",
+            "head0.content_scores": "board/group[0]/tile[0]/sram",
+            "head0.context": "board/group[0]/tile[0]/sram",
+            "head0.latent.transpose": "board/group[0]/tile[0]/sram",
+            "head0.output": "board/group[0]/tile[0]/sram",
+            "head0.pos.transpose": "board/group[0]/tile[0]/sram",
+            "head0.pos_query.mm": "board/group[0]/tile[0]/sram",
+            "head0.pos_query.reshape": "board/group[0]/tile[0]/sram",
+            "head0.pos_scores": "board/group[0]/tile[0]/sram",
+            "head0.query.mm": "board/group[0]/tile[0]/sram",
+            "head0.query.reshape": "board/group[0]/tile[0]/sram",
+            "head0.query.rows": "board/group[0]/tile[0]/sram",
+            "head0.rope": "board/group[0]/tile[0]/sram",
+            "head0.rope.rows": "board/group[0]/tile[0]/sram",
+            "head0.scale": "board/group[0]/tile[0]/sram",
+            "head0.scores": "board/group[0]/tile[0]/sram",
+            "head0.softmax": "board/group[0]/tile[0]/sram",
+            "head1.content_scores": "board/group[0]/tile[1]/sram",
+            "head1.context": "board/group[0]/tile[1]/sram",
+            "head1.latent.transpose": "board/group[0]/tile[1]/sram",
+            "head1.output": "board/group[0]/tile[1]/sram",
+            "head1.pos.transpose": "board/group[0]/tile[1]/sram",
+            "head1.pos_query.mm": "board/group[0]/tile[1]/sram",
+            "head1.pos_query.reshape": "board/group[0]/tile[1]/sram",
+            "head1.pos_scores": "board/group[0]/tile[1]/sram",
+            "head1.query.mm": "board/group[0]/tile[1]/sram",
+            "head1.query.reshape": "board/group[0]/tile[1]/sram",
+            "head1.query.rows": "board/group[0]/tile[1]/sram",
+            "head1.rope": "board/group[0]/tile[1]/sram",
+            "head1.rope.rows": "board/group[0]/tile[1]/sram",
+            "head1.scale": "board/group[0]/tile[1]/sram",
+            "head1.scores": "board/group[0]/tile[1]/sram",
+            "head1.softmax": "board/group[0]/tile[1]/sram",
+            "head2.content_scores": "board/group[1]/tile[0]/sram",
+            "head2.context": "board/group[1]/tile[0]/sram",
+            "head2.latent.transpose": "board/group[1]/tile[0]/sram",
+            "head2.output": "board/group[1]/tile[0]/sram",
+            "head2.pos.transpose": "board/group[1]/tile[0]/sram",
+            "head2.pos_query.mm": "board/group[1]/tile[0]/sram",
+            "head2.pos_query.reshape": "board/group[1]/tile[0]/sram",
+            "head2.pos_scores": "board/group[1]/tile[0]/sram",
+            "head2.query.mm": "board/group[1]/tile[0]/sram",
+            "head2.query.reshape": "board/group[1]/tile[0]/sram",
+            "head2.query.rows": "board/group[1]/tile[0]/sram",
+            "head2.rope": "board/group[1]/tile[0]/sram",
+            "head2.rope.rows": "board/group[1]/tile[0]/sram",
+            "head2.scale": "board/group[1]/tile[0]/sram",
+            "head2.scores": "board/group[1]/tile[0]/sram",
+            "head2.softmax": "board/group[1]/tile[0]/sram",
+            "head3.content_scores": "board/group[1]/tile[1]/sram",
+            "head3.context": "board/group[1]/tile[1]/sram",
+            "head3.latent.transpose": "board/group[1]/tile[1]/sram",
+            "head3.output": "board/group[1]/tile[1]/sram",
+            "head3.pos.transpose": "board/group[1]/tile[1]/sram",
+            "head3.pos_query.mm": "board/group[1]/tile[1]/sram",
+            "head3.pos_query.reshape": "board/group[1]/tile[1]/sram",
+            "head3.pos_scores": "board/group[1]/tile[1]/sram",
+            "head3.query.mm": "board/group[1]/tile[1]/sram",
+            "head3.query.reshape": "board/group[1]/tile[1]/sram",
+            "head3.query.rows": "board/group[1]/tile[1]/sram",
+            "head3.rope": "board/group[1]/tile[1]/sram",
+            "head3.rope.rows": "board/group[1]/tile[1]/sram",
+            "head3.scale": "board/group[1]/tile[1]/sram",
+            "head3.scores": "board/group[1]/tile[1]/sram",
+            "head3.softmax": "board/group[1]/tile[1]/sram",
+            "merge.1": "board/root_sram",
+            "merge.2": "board/root_sram",
+            "merge.3": "board/root_sram",
+            "query.down.mm": "board/root_sram",
+            "query.down.reshape": "board/root_sram",
+            "query.norm": "board/root_sram"
+          },
+          "operator_rules": {},
+          "replicas": [
+            {
+              "destinations": [
+                {
+                  "consumers": [
+                    "head0.latent.transpose",
+                    "head0.context"
+                  ],
+                  "memory": "board/group[0]/tile[0]/sram",
+                  "tensor": "replica.latent_kv.0"
+                },
+                {
+                  "consumers": [
+                    "head1.latent.transpose",
+                    "head1.context"
+                  ],
+                  "memory": "board/group[0]/tile[1]/sram",
+                  "tensor": "replica.latent_kv.1"
+                },
+                {
+                  "consumers": [
+                    "head2.latent.transpose",
+                    "head2.context"
+                  ],
+                  "memory": "board/group[1]/tile[0]/sram",
+                  "tensor": "replica.latent_kv.2"
+                },
+                {
+                  "consumers": [
+                    "head3.latent.transpose",
+                    "head3.context"
+                  ],
+                  "memory": "board/group[1]/tile[1]/sram",
+                  "tensor": "replica.latent_kv.3"
+                }
+              ],
+              "id": "latent_kv",
+              "multicast": false,
+              "source": "latent_kv"
+            },
+            {
+              "destinations": [
+                {
+                  "consumers": [
+                    "head0.pos.transpose"
+                  ],
+                  "memory": "board/group[0]/tile[0]/sram",
+                  "tensor": "replica.pos_key.0"
+                },
+                {
+                  "consumers": [
+                    "head1.pos.transpose"
+                  ],
+                  "memory": "board/group[0]/tile[1]/sram",
+                  "tensor": "replica.pos_key.1"
+                },
+                {
+                  "consumers": [
+                    "head2.pos.transpose"
+                  ],
+                  "memory": "board/group[1]/tile[0]/sram",
+                  "tensor": "replica.pos_key.2"
+                },
+                {
+                  "consumers": [
+                    "head3.pos.transpose"
+                  ],
+                  "memory": "board/group[1]/tile[1]/sram",
+                  "tensor": "replica.pos_key.3"
+                }
+              ],
+              "id": "pos_key",
+              "multicast": false,
+              "source": "pos_key"
+            }
+          ],
+          "rules": {
+            "matmul": {
+              "id": "matmul.tiled",
+              "options": {
+                "tiles": {
+                  "k": 3,
+                  "m": 2,
+                  "n": 4
+                }
+              },
+              "version": "1"
+            }
+          },
+          "storage": {
+            "W_DQ": "board/dram",
+            "X": "board/dram",
+            "head0.WQK": "board/dram",
+            "head0.WQR": "board/dram",
+            "head0.WVO": "board/dram",
+            "head1.WQK": "board/dram",
+            "head1.WQR": "board/dram",
+            "head1.WVO": "board/dram",
+            "head2.WQK": "board/dram",
+            "head2.WQR": "board/dram",
+            "head2.WVO": "board/dram",
+            "head3.WQK": "board/dram",
+            "head3.WQR": "board/dram",
+            "head3.WVO": "board/dram",
+            "latent_kv": "board/dram",
+            "pos_key": "board/dram",
+            "q_gamma": "board/dram",
+            "rope_cos": "board/dram",
+            "rope_sin": "board/dram"
+          }
+        },
+        "template": "compile_graph_v4"
+      },
+      "topology": {
+        "compute_storage": {
+          "board/group[0]/tile[0]/sm": "board/group[0]/tile[0]/sram",
+          "board/group[0]/tile[1]/sm": "board/group[0]/tile[1]/sram",
+          "board/group[1]/tile[0]/sm": "board/group[1]/tile[0]/sram",
+          "board/group[1]/tile[1]/sm": "board/group[1]/tile[1]/sram"
+        },
+        "dram": "board/dram",
+        "groups": {
+          "group0": {
+            "computes": [
+              "board/group[0]/tile[0]/sm",
+              "board/group[0]/tile[1]/sm"
+            ],
+            "storage": {
+              "board/group[0]/tile[0]/sm": "board/group[0]/tile[0]/sram",
+              "board/group[0]/tile[1]/sm": "board/group[0]/tile[1]/sram"
+            }
+          },
+          "group1": {
+            "computes": [
+              "board/group[1]/tile[0]/sm",
+              "board/group[1]/tile[1]/sm"
+            ],
+            "storage": {
+              "board/group[1]/tile[0]/sm": "board/group[1]/tile[0]/sram",
+              "board/group[1]/tile[1]/sm": "board/group[1]/tile[1]/sram"
+            }
+          }
+        },
+        "root_compute": "board/root/sm",
+        "root_memory": "board/root_sram",
+        "schema": "arch-explorer.shared-memory-topology.v1",
+        "shared": false,
+        "source": "explicit synthetic grouped storage/tree service"
+      }
+    }
+  },
+  "schema": "arch-explorer.sim50-inputs.v1",
+  "shapes": {
+    "W_DQ": [
+      6,
+      3
+    ],
+    "X": [
+      1,
+      6
+    ],
+    "head0.WQK": [
+      3,
+      4
+    ],
+    "head0.WQR": [
+      3,
+      2
+    ],
+    "head0.WVO": [
+      4,
+      5
+    ],
+    "head1.WQK": [
+      3,
+      4
+    ],
+    "head1.WQR": [
+      3,
+      2
+    ],
+    "head1.WVO": [
+      4,
+      5
+    ],
+    "head2.WQK": [
+      3,
+      4
+    ],
+    "head2.WQR": [
+      3,
+      2
+    ],
+    "head2.WVO": [
+      4,
+      5
+    ],
+    "head3.WQK": [
+      3,
+      4
+    ],
+    "head3.WQR": [
+      3,
+      2
+    ],
+    "head3.WVO": [
+      4,
+      5
+    ],
+    "latent_kv": [
+      1,
+      5,
+      4
+    ],
+    "pos_key": [
+      1,
+      5,
+      2
+    ],
+    "q_gamma": [
+      3
+    ],
+    "rope_cos": [
+      1
+    ],
+    "rope_sin": [
+      1
+    ]
+  },
+  "source": "deterministic signed fractions plus explicit gamma and 0.6/0.8 rotation; synthetic, no expected outputs",
+  "structure_only": {
+    "heads": 128,
+    "latent_rank": 512,
+    "note": "dimensions and cache-resource declarations",
+    "positional_dim": 64,
+    "sequence": 8192
+  },
+  "workload": {
+    "kind": "mla_decode",
+    "params": {
+      "batch": 1,
+      "content_dim": 4,
+      "dtype": "fp32",
+      "epsilon": 1e-06,
+      "heads": 4,
+      "inputs": {
+        "W_DQ": [
+          [
+            -0.1875,
+            -0.125,
+            -0.0625
+          ],
+          [
+            0.0,
+            0.0625,
+            0.125
+          ],
+          [
+            0.1875,
+            0.25,
+            0.3125
+          ],
+          [
+            0.375,
+            -0.375,
+            -0.3125
+          ],
+          [
+            -0.25,
+            -0.1875,
+            -0.125
+          ],
+          [
+            -0.0625,
+            0.0,
+            0.0625
+          ]
+        ],
+        "X": [
+          [
+            -0.375,
+            -0.3125,
+            -0.25,
+            -0.1875,
+            -0.125,
+            -0.0625
+          ]
+        ],
+        "head0.WQK": [
+          [
+            0.125,
+            0.1875,
+            0.25,
+            0.3125
+          ],
+          [
+            0.375,
+            -0.375,
+            -0.3125,
+            -0.25
+          ],
+          [
+            -0.1875,
+            -0.125,
+            -0.0625,
+            0.0
+          ]
+        ],
+        "head0.WQR": [
+          [
+            0.3125,
+            0.375
+          ],
+          [
+            -0.375,
+            -0.3125
+          ],
+          [
+            -0.25,
+            -0.1875
+          ]
+        ],
+        "head0.WVO": [
+          [
+            -0.3125,
+            -0.25,
+            -0.1875,
+            -0.125,
+            -0.0625
+          ],
+          [
+            0.0,
+            0.0625,
+            0.125,
+            0.1875,
+            0.25
+          ],
+          [
+            0.3125,
+            0.375,
+            -0.375,
+            -0.3125,
+            -0.25
+          ],
+          [
+            -0.1875,
+            -0.125,
+            -0.0625,
+            0.0,
+            0.0625
+          ]
+        ],
+        "head1.WQK": [
+          [
+            -0.125,
+            -0.0625,
+            0.0,
+            0.0625
+          ],
+          [
+            0.125,
+            0.1875,
+            0.25,
+            0.3125
+          ],
+          [
+            0.375,
+            -0.375,
+            -0.3125,
+            -0.25
+          ]
+        ],
+        "head1.WQR": [
+          [
+            0.0625,
+            0.125
+          ],
+          [
+            0.1875,
+            0.25
+          ],
+          [
+            0.3125,
+            0.375
+          ]
+        ],
+        "head1.WVO": [
+          [
+            0.25,
+            0.3125,
+            0.375,
+            -0.375,
+            -0.3125
+          ],
+          [
+            -0.25,
+            -0.1875,
+            -0.125,
+            -0.0625,
+            0.0
+          ],
+          [
+            0.0625,
+            0.125,
+            0.1875,
+            0.25,
+            0.3125
+          ],
+          [
+            0.375,
+            -0.375,
+            -0.3125,
+            -0.25,
+            -0.1875
+          ]
+        ],
+        "head2.WQK": [
+          [
+            -0.375,
+            -0.3125,
+            -0.25,
+            -0.1875
+          ],
+          [
+            -0.125,
+            -0.0625,
+            0.0,
+            0.0625
+          ],
+          [
+            0.125,
+            0.1875,
+            0.25,
+            0.3125
+          ]
+        ],
+        "head2.WQR": [
+          [
+            -0.1875,
+            -0.125
+          ],
+          [
+            -0.0625,
+            0.0
+          ],
+          [
+            0.0625,
+            0.125
+          ]
+        ],
+        "head2.WVO": [
+          [
+            0.0,
+            0.0625,
+            0.125,
+            0.1875,
+            0.25
+          ],
+          [
+            0.3125,
+            0.375,
+            -0.375,
+            -0.3125,
+            -0.25
+          ],
+          [
+            -0.1875,
+            -0.125,
+            -0.0625,
+            0.0,
+            0.0625
+          ],
+          [
+            0.125,
+            0.1875,
+            0.25,
+            0.3125,
+            0.375
+          ]
+        ],
+        "head3.WQK": [
+          [
+            0.1875,
+            0.25,
+            0.3125,
+            0.375
+          ],
+          [
+            -0.375,
+            -0.3125,
+            -0.25,
+            -0.1875
+          ],
+          [
+            -0.125,
+            -0.0625,
+            0.0,
+            0.0625
+          ]
+        ],
+        "head3.WQR": [
+          [
+            0.375,
+            -0.375
+          ],
+          [
+            -0.3125,
+            -0.25
+          ],
+          [
+            -0.1875,
+            -0.125
+          ]
+        ],
+        "head3.WVO": [
+          [
+            -0.25,
+            -0.1875,
+            -0.125,
+            -0.0625,
+            0.0
+          ],
+          [
+            0.0625,
+            0.125,
+            0.1875,
+            0.25,
+            0.3125
+          ],
+          [
+            0.375,
+            -0.375,
+            -0.3125,
+            -0.25,
+            -0.1875
+          ],
+          [
+            -0.125,
+            -0.0625,
+            0.0,
+            0.0625,
+            0.125
+          ]
+        ],
+        "latent_kv": [
+          [
+            [
+              0.1875,
+              0.25,
+              0.3125,
+              0.375
+            ],
+            [
+              -0.375,
+              -0.3125,
+              -0.25,
+              -0.1875
+            ],
+            [
+              -0.125,
+              -0.0625,
+              0.0,
+              0.0625
+            ],
+            [
+              0.125,
+              0.1875,
+              0.25,
+              0.3125
+            ],
+            [
+              0.375,
+              -0.375,
+              -0.3125,
+              -0.25
+            ]
+          ]
+        ],
+        "pos_key": [
+          [
+            [
+              0.375,
+              -0.375
+            ],
+            [
+              -0.3125,
+              -0.25
+            ],
+            [
+              -0.1875,
+              -0.125
+            ],
+            [
+              -0.0625,
+              0.0
+            ],
+            [
+              0.0625,
+              0.125
+            ]
+          ]
+        ],
+        "q_gamma": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "rope_cos": [
+          0.6
+        ],
+        "rope_sin": [
+          0.8
+        ]
+      },
+      "latent_rank": 4,
+      "output_width": 5,
+      "positional_dim": 2,
+      "query_rank": 3,
+      "sequence": 5,
+      "width": 6
+    }
+  }
+}

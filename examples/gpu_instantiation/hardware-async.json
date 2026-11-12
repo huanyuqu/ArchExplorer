@@ -1,0 +1,7 @@
+{
+  "sm_clusters": 4,
+  "memory_partitions": 8,
+  "l2_subpartitions": 2,
+  "clocks_mhz": {"sm": 1300, "icnt": 1400, "l2": 2100, "dram": 1600},
+  "detailed_dram": true
+}

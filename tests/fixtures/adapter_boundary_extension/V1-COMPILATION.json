@@ -1,0 +1,1340 @@
+{
+  "binding": {
+    "sha256": "160106650af72bd350efed3cf6cffec282b8c59aa9c3bb28c963945b496a6fec"
+  },
+  "components": [
+    {
+      "identity": {
+        "component": "sm",
+        "declaration": {
+          "capabilities": {
+            "boundary": "component_io",
+            "contained_components": [],
+            "external_streams": false,
+            "hardware_accuracy": null,
+            "operations": "explicit count; MAC=2"
+          },
+          "component": "sm",
+          "conventions": {
+            "arbitration": "fifo",
+            "includes_startup": false,
+            "pipelined": false,
+            "time_base": "ns"
+          },
+          "execution_domain": "events",
+          "execution_modes": [
+            "demand"
+          ],
+          "factory": "arch_explorer.components.sm.implementations.roofline:factory",
+          "hardware_parameters": null,
+          "id": "sm.roofline",
+          "input_contract": "roofline.work.v1",
+          "parameters": {
+            "bandwidth_bytes_per_ns": {
+              "doc": "",
+              "domain": null,
+              "extensive": true,
+              "kind": "float",
+              "required": true,
+              "unit": "B/ns"
+            },
+            "boundary": {
+              "doc": "",
+              "domain": [
+                "component_io"
+              ],
+              "extensive": false,
+              "kind": "str",
+              "required": true,
+              "unit": "1"
+            },
+            "peak_ops_per_ns": {
+              "doc": "",
+              "domain": null,
+              "extensive": true,
+              "kind": "float",
+              "required": true,
+              "unit": "op/ns"
+            }
+          },
+          "result_scope": "Analytical estimate under ideal overlap; not native cycles or calibrated timing",
+          "source": {
+            "basis": "standard roofline bound max(F/P,B/BW)",
+            "calibration": "none"
+          },
+          "validator": "arch_explorer.components.sm.implementations.roofline:validate",
+          "version": "1"
+        },
+        "implementation": {
+          "id": "sm.roofline",
+          "params": {
+            "bandwidth_bytes_per_ns": {
+              "source": "explicit synthetic VAL53 input assumption; no hardware calibration",
+              "unit": "B/ns",
+              "value": 8
+            },
+            "boundary": {
+              "source": "explicit synthetic VAL53 input assumption; no hardware calibration",
+              "unit": "1",
+              "value": "component_io"
+            },
+            "peak_ops_per_ns": {
+              "source": "explicit synthetic VAL53 input assumption; no hardware calibration",
+              "unit": "op/ns",
+              "value": 16
+            }
+          },
+          "version": "1"
+        }
+      },
+      "path": "board/sm"
+    },
+    {
+      "identity": {
+        "component": "dram",
+        "declaration": {
+          "capabilities": {
+            "legacy_default": true,
+            "operations": "kernel_demand / memory access / route, according to declared hardware role; factory validates support",
+            "port_protocol": "events.demand.v1",
+            "precision": "explicit hardware precision when consumed; no implicit conversion",
+            "shape": "Kernel gemm=(batch,m,k,n), mvm=(batch,m,k), vector=(rows,cols); applicable subset validated by factory"
+          },
+          "component": "dram",
+          "conventions": {
+            "arbitration": "fair_share",
+            "includes_startup": true,
+            "pipelined": true,
+            "time_base": "ns"
+          },
+          "execution_domain": "events",
+          "execution_modes": [
+            "demand",
+            "stateful"
+          ],
+          "factory": "arch_explorer.components.dram.definition:Dram.build",
+          "hardware_parameters": null,
+          "id": "builtin.dram",
+          "input_contract": "events.component.v1",
+          "parameters": {},
+          "result_scope": "Existing event model; original declared limitations unchanged",
+          "source": {
+            "basis": "arch_explorer.components.dram.definition:Dram"
+          },
+          "validator": null,
+          "version": "1"
+        },
+        "implementation": {
+          "id": "builtin.dram",
+          "params": {},
+          "version": "1"
+        }
+      },
+      "path": "board/dram"
+    }
+  ],
+  "implementations": {},
+  "lowered": {
+    "mapping": {
+      "params": {
+        "compute": "board/sm",
+        "implementations": {
+          "@compile/[\"matmul\",\"assemble\",0,0]": "compiled.roofline.assemble",
+          "@compile/[\"matmul\",\"tile\",0,0]": "compiled.roofline.matmul",
+          "@compile/[\"matmul\",\"tile\",0,3]": "compiled.roofline.matmul",
+          "@compile/[\"matmul\",\"tile\",2,0]": "compiled.roofline.matmul",
+          "@compile/[\"matmul\",\"tile\",2,3]": "compiled.roofline.matmul"
+        },
+        "memory": "board/dram"
+      },
+      "template": "compiled_roofline"
+    },
+    "provider": "events",
+    "scope": {
+      "boundary": "component_io semantic data only; no duplicate external memory/network time",
+      "hardware_accuracy": null,
+      "numerics": "registered semantic reference",
+      "timing": "ideal overlap roofline, not native execution"
+    },
+    "workload": {
+      "kind": "graph",
+      "name": "",
+      "params": {
+        "dtype": "fp32",
+        "iterations": 1,
+        "meta": {
+          "inputs": {
+            "A": [
+              [
+                [
+                  0.125,
+                  0.25,
+                  0.375
+                ],
+                [
+                  0.5,
+                  0.625,
+                  0.75
+                ],
+                [
+                  0.875,
+                  1.0,
+                  1.125
+                ]
+              ]
+            ],
+            "B": [
+              [
+                [
+                  1.5,
+                  1.625,
+                  1.75,
+                  1.875,
+                  2.0
+                ],
+                [
+                  2.125,
+                  2.25,
+                  2.375,
+                  2.5,
+                  2.625
+                ],
+                [
+                  2.75,
+                  2.875,
+                  3.0,
+                  3.125,
+                  3.25
+                ]
+              ]
+            ]
+          }
+        },
+        "name": "matmul.mapped",
+        "operators": [
+          {
+            "attrs": {
+              "batch": 1,
+              "col": 0,
+              "cols": 3,
+              "k": 3,
+              "k_tile": 2,
+              "m": 3,
+              "n": 5,
+              "row": 0,
+              "rows": 2,
+              "shared_b": false
+            },
+            "inputs": [
+              "A",
+              "B"
+            ],
+            "label": "Matmul",
+            "name": "@compile/[\"matmul\",\"tile\",0,0]",
+            "op": "compiled.matmul",
+            "outputs": [
+              "@compile/[\"matmul\",\"tile\",0,0]"
+            ],
+            "type": "operator"
+          },
+          {
+            "attrs": {
+              "batch": 1,
+              "col": 3,
+              "cols": 2,
+              "k": 3,
+              "k_tile": 2,
+              "m": 3,
+              "n": 5,
+              "row": 0,
+              "rows": 2,
+              "shared_b": false
+            },
+            "inputs": [
+              "A",
+              "B"
+            ],
+            "label": "Matmul",
+            "name": "@compile/[\"matmul\",\"tile\",0,3]",
+            "op": "compiled.matmul",
+            "outputs": [
+              "@compile/[\"matmul\",\"tile\",0,3]"
+            ],
+            "type": "operator"
+          },
+          {
+            "attrs": {
+              "batch": 1,
+              "col": 0,
+              "cols": 3,
+              "k": 3,
+              "k_tile": 2,
+              "m": 3,
+              "n": 5,
+              "row": 2,
+              "rows": 1,
+              "shared_b": false
+            },
+            "inputs": [
+              "A",
+              "B"
+            ],
+            "label": "Matmul",
+            "name": "@compile/[\"matmul\",\"tile\",2,0]",
+            "op": "compiled.matmul",
+            "outputs": [
+              "@compile/[\"matmul\",\"tile\",2,0]"
+            ],
+            "type": "operator"
+          },
+          {
+            "attrs": {
+              "batch": 1,
+              "col": 3,
+              "cols": 2,
+              "k": 3,
+              "k_tile": 2,
+              "m": 3,
+              "n": 5,
+              "row": 2,
+              "rows": 1,
+              "shared_b": false
+            },
+            "inputs": [
+              "A",
+              "B"
+            ],
+            "label": "Matmul",
+            "name": "@compile/[\"matmul\",\"tile\",2,3]",
+            "op": "compiled.matmul",
+            "outputs": [
+              "@compile/[\"matmul\",\"tile\",2,3]"
+            ],
+            "type": "operator"
+          },
+          {
+            "attrs": {
+              "batch": 1,
+              "m": 3,
+              "n": 5,
+              "output_shape": [
+                1,
+                3,
+                5
+              ],
+              "tiles": [
+                {
+                  "col": 0,
+                  "cols": 3,
+                  "row": 0,
+                  "rows": 2
+                },
+                {
+                  "col": 3,
+                  "cols": 2,
+                  "row": 0,
+                  "rows": 2
+                },
+                {
+                  "col": 0,
+                  "cols": 3,
+                  "row": 2,
+                  "rows": 1
+                },
+                {
+                  "col": 3,
+                  "cols": 2,
+                  "row": 2,
+                  "rows": 1
+                }
+              ]
+            },
+            "inputs": [
+              "@compile/[\"matmul\",\"tile\",0,0]",
+              "@compile/[\"matmul\",\"tile\",0,3]",
+              "@compile/[\"matmul\",\"tile\",2,0]",
+              "@compile/[\"matmul\",\"tile\",2,3]"
+            ],
+            "label": "Matmul",
+            "name": "@compile/[\"matmul\",\"assemble\",0,0]",
+            "op": "compiled.assemble",
+            "outputs": [
+              "C"
+            ],
+            "type": "operator"
+          }
+        ],
+        "schema": "arch-explorer.workload-graph.v1",
+        "tensors": [
+          {
+            "alias_of": null,
+            "dtype": "fp32",
+            "kind": "activation",
+            "name": "A",
+            "shape": [
+              1,
+              3,
+              3
+            ],
+            "strides": null
+          },
+          {
+            "alias_of": null,
+            "dtype": "fp32",
+            "kind": "weight",
+            "name": "B",
+            "shape": [
+              1,
+              3,
+              5
+            ],
+            "strides": null
+          },
+          {
+            "alias_of": null,
+            "dtype": "fp32",
+            "kind": "activation",
+            "name": "C",
+            "shape": [
+              1,
+              3,
+              5
+            ],
+            "strides": null
+          },
+          {
+            "alias_of": null,
+            "dtype": "fp32",
+            "kind": "activation",
+            "name": "@compile/[\"matmul\",\"tile\",0,0]",
+            "shape": [
+              1,
+              2,
+              3
+            ],
+            "strides": null
+          },
+          {
+            "alias_of": null,
+            "dtype": "fp32",
+            "kind": "activation",
+            "name": "@compile/[\"matmul\",\"tile\",0,3]",
+            "shape": [
+              1,
+              2,
+              2
+            ],
+            "strides": null
+          },
+          {
+            "alias_of": null,
+            "dtype": "fp32",
+            "kind": "activation",
+            "name": "@compile/[\"matmul\",\"tile\",2,0]",
+            "shape": [
+              1,
+              1,
+              3
+            ],
+            "strides": null
+          },
+          {
+            "alias_of": null,
+            "dtype": "fp32",
+            "kind": "activation",
+            "name": "@compile/[\"matmul\",\"tile\",2,3]",
+            "shape": [
+              1,
+              1,
+              2
+            ],
+            "strides": null
+          }
+        ]
+      },
+      "weight": 1.0
+    }
+  },
+  "plan": {
+    "edge_policy": "masked extents; inactive CTA lanes do not execute arithmetic",
+    "nominal_tile_shape": {
+      "k": 2,
+      "m": 2,
+      "n": 3
+    },
+    "steps": [
+      {
+        "access": {
+          "address_metadata": "excluded from component_io; emitted natively",
+          "boundary": "component_io",
+          "data_access": "scalar operands; one A and B read per FMA",
+          "operations": 36,
+          "output_elements": 6,
+          "read_bytes": 144,
+          "reduction_fmas": 18,
+          "write_bytes": 24
+        },
+        "compute": "board/sm",
+        "dependencies": [],
+        "iteration_box": {
+          "active_iteration_points": 18,
+          "masked_iteration_points": 6,
+          "nominal_iteration_points": 24,
+          "note": "nominal box is not executed padding work"
+        },
+        "memory": "board/dram",
+        "name": "@compile/[\"matmul\",\"tile\",0,0]",
+        "origin": "matmul",
+        "reduction_blocks": [
+          {
+            "start": 0,
+            "stop": 2
+          },
+          {
+            "start": 2,
+            "stop": 3
+          }
+        ],
+        "semantic": "compiled.matmul"
+      },
+      {
+        "access": {
+          "address_metadata": "excluded from component_io; emitted natively",
+          "boundary": "component_io",
+          "data_access": "scalar operands; one A and B read per FMA",
+          "operations": 24,
+          "output_elements": 4,
+          "read_bytes": 96,
+          "reduction_fmas": 12,
+          "write_bytes": 16
+        },
+        "compute": "board/sm",
+        "dependencies": [],
+        "iteration_box": {
+          "active_iteration_points": 12,
+          "masked_iteration_points": 12,
+          "nominal_iteration_points": 24,
+          "note": "nominal box is not executed padding work"
+        },
+        "memory": "board/dram",
+        "name": "@compile/[\"matmul\",\"tile\",0,3]",
+        "origin": "matmul",
+        "reduction_blocks": [
+          {
+            "start": 0,
+            "stop": 2
+          },
+          {
+            "start": 2,
+            "stop": 3
+          }
+        ],
+        "semantic": "compiled.matmul"
+      },
+      {
+        "access": {
+          "address_metadata": "excluded from component_io; emitted natively",
+          "boundary": "component_io",
+          "data_access": "scalar operands; one A and B read per FMA",
+          "operations": 18,
+          "output_elements": 3,
+          "read_bytes": 72,
+          "reduction_fmas": 9,
+          "write_bytes": 12
+        },
+        "compute": "board/sm",
+        "dependencies": [],
+        "iteration_box": {
+          "active_iteration_points": 9,
+          "masked_iteration_points": 15,
+          "nominal_iteration_points": 24,
+          "note": "nominal box is not executed padding work"
+        },
+        "memory": "board/dram",
+        "name": "@compile/[\"matmul\",\"tile\",2,0]",
+        "origin": "matmul",
+        "reduction_blocks": [
+          {
+            "start": 0,
+            "stop": 2
+          },
+          {
+            "start": 2,
+            "stop": 3
+          }
+        ],
+        "semantic": "compiled.matmul"
+      },
+      {
+        "access": {
+          "address_metadata": "excluded from component_io; emitted natively",
+          "boundary": "component_io",
+          "data_access": "scalar operands; one A and B read per FMA",
+          "operations": 12,
+          "output_elements": 2,
+          "read_bytes": 48,
+          "reduction_fmas": 6,
+          "write_bytes": 8
+        },
+        "compute": "board/sm",
+        "dependencies": [],
+        "iteration_box": {
+          "active_iteration_points": 6,
+          "masked_iteration_points": 18,
+          "nominal_iteration_points": 24,
+          "note": "nominal box is not executed padding work"
+        },
+        "memory": "board/dram",
+        "name": "@compile/[\"matmul\",\"tile\",2,3]",
+        "origin": "matmul",
+        "reduction_blocks": [
+          {
+            "start": 0,
+            "stop": 2
+          },
+          {
+            "start": 2,
+            "stop": 3
+          }
+        ],
+        "semantic": "compiled.matmul"
+      },
+      {
+        "access": {
+          "address_metadata": "excluded from component_io; emitted natively",
+          "boundary": "component_io",
+          "data_access": "materialized tile read and assembled output store",
+          "operations": 0,
+          "output_elements": 15,
+          "read_bytes": 60,
+          "reduction_fmas": 0,
+          "write_bytes": 60
+        },
+        "compute": "board/sm",
+        "dependencies": [
+          "@compile/[\"matmul\",\"tile\",0,0]",
+          "@compile/[\"matmul\",\"tile\",0,3]",
+          "@compile/[\"matmul\",\"tile\",2,0]",
+          "@compile/[\"matmul\",\"tile\",2,3]"
+        ],
+        "iteration_box": null,
+        "memory": "board/dram",
+        "name": "@compile/[\"matmul\",\"assemble\",0,0]",
+        "origin": "matmul",
+        "reduction_blocks": [],
+        "semantic": "compiled.assemble"
+      }
+    ],
+    "storage": [
+      {
+        "bytes": 36,
+        "consumers": [
+          "@compile/[\"matmul\",\"tile\",0,0]",
+          "@compile/[\"matmul\",\"tile\",0,3]",
+          "@compile/[\"matmul\",\"tile\",2,0]",
+          "@compile/[\"matmul\",\"tile\",2,3]"
+        ],
+        "memory": "board/dram",
+        "producer": null,
+        "release": "all real consumers complete",
+        "returned": false,
+        "tensor": "A"
+      },
+      {
+        "bytes": 60,
+        "consumers": [
+          "@compile/[\"matmul\",\"tile\",0,0]",
+          "@compile/[\"matmul\",\"tile\",0,3]",
+          "@compile/[\"matmul\",\"tile\",2,0]",
+          "@compile/[\"matmul\",\"tile\",2,3]"
+        ],
+        "memory": "board/dram",
+        "producer": null,
+        "release": "all real consumers complete",
+        "returned": false,
+        "tensor": "B"
+      },
+      {
+        "bytes": 60,
+        "consumers": [],
+        "memory": "board/dram",
+        "producer": "@compile/[\"matmul\",\"assemble\",0,0]",
+        "release": "all real consumers complete",
+        "returned": true,
+        "tensor": "C"
+      },
+      {
+        "bytes": 24,
+        "consumers": [
+          "@compile/[\"matmul\",\"assemble\",0,0]"
+        ],
+        "memory": "board/dram",
+        "producer": "@compile/[\"matmul\",\"tile\",0,0]",
+        "release": "all real consumers complete",
+        "returned": false,
+        "tensor": "@compile/[\"matmul\",\"tile\",0,0]"
+      },
+      {
+        "bytes": 16,
+        "consumers": [
+          "@compile/[\"matmul\",\"assemble\",0,0]"
+        ],
+        "memory": "board/dram",
+        "producer": "@compile/[\"matmul\",\"tile\",0,3]",
+        "release": "all real consumers complete",
+        "returned": false,
+        "tensor": "@compile/[\"matmul\",\"tile\",0,3]"
+      },
+      {
+        "bytes": 12,
+        "consumers": [
+          "@compile/[\"matmul\",\"assemble\",0,0]"
+        ],
+        "memory": "board/dram",
+        "producer": "@compile/[\"matmul\",\"tile\",2,0]",
+        "release": "all real consumers complete",
+        "returned": false,
+        "tensor": "@compile/[\"matmul\",\"tile\",2,0]"
+      },
+      {
+        "bytes": 8,
+        "consumers": [
+          "@compile/[\"matmul\",\"assemble\",0,0]"
+        ],
+        "memory": "board/dram",
+        "producer": "@compile/[\"matmul\",\"tile\",2,3]",
+        "release": "all real consumers complete",
+        "returned": false,
+        "tensor": "@compile/[\"matmul\",\"tile\",2,3]"
+      }
+    ],
+    "tiling": {
+      "k": 2,
+      "m": 2,
+      "n": 3
+    }
+  },
+  "program": {
+    "dtype": "fp32",
+    "iterations": 1,
+    "meta": {
+      "inputs": {
+        "A": [
+          [
+            [
+              0.125,
+              0.25,
+              0.375
+            ],
+            [
+              0.5,
+              0.625,
+              0.75
+            ],
+            [
+              0.875,
+              1.0,
+              1.125
+            ]
+          ]
+        ],
+        "B": [
+          [
+            [
+              1.5,
+              1.625,
+              1.75,
+              1.875,
+              2.0
+            ],
+            [
+              2.125,
+              2.25,
+              2.375,
+              2.5,
+              2.625
+            ],
+            [
+              2.75,
+              2.875,
+              3.0,
+              3.125,
+              3.25
+            ]
+          ]
+        ]
+      }
+    },
+    "name": "matmul.mapped",
+    "operators": [
+      {
+        "attrs": {
+          "batch": 1,
+          "col": 0,
+          "cols": 3,
+          "k": 3,
+          "k_tile": 2,
+          "m": 3,
+          "n": 5,
+          "row": 0,
+          "rows": 2,
+          "shared_b": false
+        },
+        "inputs": [
+          "A",
+          "B"
+        ],
+        "label": "Matmul",
+        "name": "@compile/[\"matmul\",\"tile\",0,0]",
+        "op": "compiled.matmul",
+        "outputs": [
+          "@compile/[\"matmul\",\"tile\",0,0]"
+        ],
+        "type": "operator"
+      },
+      {
+        "attrs": {
+          "batch": 1,
+          "col": 3,
+          "cols": 2,
+          "k": 3,
+          "k_tile": 2,
+          "m": 3,
+          "n": 5,
+          "row": 0,
+          "rows": 2,
+          "shared_b": false
+        },
+        "inputs": [
+          "A",
+          "B"
+        ],
+        "label": "Matmul",
+        "name": "@compile/[\"matmul\",\"tile\",0,3]",
+        "op": "compiled.matmul",
+        "outputs": [
+          "@compile/[\"matmul\",\"tile\",0,3]"
+        ],
+        "type": "operator"
+      },
+      {
+        "attrs": {
+          "batch": 1,
+          "col": 0,
+          "cols": 3,
+          "k": 3,
+          "k_tile": 2,
+          "m": 3,
+          "n": 5,
+          "row": 2,
+          "rows": 1,
+          "shared_b": false
+        },
+        "inputs": [
+          "A",
+          "B"
+        ],
+        "label": "Matmul",
+        "name": "@compile/[\"matmul\",\"tile\",2,0]",
+        "op": "compiled.matmul",
+        "outputs": [
+          "@compile/[\"matmul\",\"tile\",2,0]"
+        ],
+        "type": "operator"
+      },
+      {
+        "attrs": {
+          "batch": 1,
+          "col": 3,
+          "cols": 2,
+          "k": 3,
+          "k_tile": 2,
+          "m": 3,
+          "n": 5,
+          "row": 2,
+          "rows": 1,
+          "shared_b": false
+        },
+        "inputs": [
+          "A",
+          "B"
+        ],
+        "label": "Matmul",
+        "name": "@compile/[\"matmul\",\"tile\",2,3]",
+        "op": "compiled.matmul",
+        "outputs": [
+          "@compile/[\"matmul\",\"tile\",2,3]"
+        ],
+        "type": "operator"
+      },
+      {
+        "attrs": {
+          "batch": 1,
+          "m": 3,
+          "n": 5,
+          "output_shape": [
+            1,
+            3,
+            5
+          ],
+          "tiles": [
+            {
+              "col": 0,
+              "cols": 3,
+              "row": 0,
+              "rows": 2
+            },
+            {
+              "col": 3,
+              "cols": 2,
+              "row": 0,
+              "rows": 2
+            },
+            {
+              "col": 0,
+              "cols": 3,
+              "row": 2,
+              "rows": 1
+            },
+            {
+              "col": 3,
+              "cols": 2,
+              "row": 2,
+              "rows": 1
+            }
+          ]
+        },
+        "inputs": [
+          "@compile/[\"matmul\",\"tile\",0,0]",
+          "@compile/[\"matmul\",\"tile\",0,3]",
+          "@compile/[\"matmul\",\"tile\",2,0]",
+          "@compile/[\"matmul\",\"tile\",2,3]"
+        ],
+        "label": "Matmul",
+        "name": "@compile/[\"matmul\",\"assemble\",0,0]",
+        "op": "compiled.assemble",
+        "outputs": [
+          "C"
+        ],
+        "type": "operator"
+      }
+    ],
+    "schema": "arch-explorer.workload-graph.v1",
+    "tensors": [
+      {
+        "alias_of": null,
+        "dtype": "fp32",
+        "kind": "activation",
+        "name": "A",
+        "shape": [
+          1,
+          3,
+          3
+        ],
+        "strides": null
+      },
+      {
+        "alias_of": null,
+        "dtype": "fp32",
+        "kind": "weight",
+        "name": "B",
+        "shape": [
+          1,
+          3,
+          5
+        ],
+        "strides": null
+      },
+      {
+        "alias_of": null,
+        "dtype": "fp32",
+        "kind": "activation",
+        "name": "C",
+        "shape": [
+          1,
+          3,
+          5
+        ],
+        "strides": null
+      },
+      {
+        "alias_of": null,
+        "dtype": "fp32",
+        "kind": "activation",
+        "name": "@compile/[\"matmul\",\"tile\",0,0]",
+        "shape": [
+          1,
+          2,
+          3
+        ],
+        "strides": null
+      },
+      {
+        "alias_of": null,
+        "dtype": "fp32",
+        "kind": "activation",
+        "name": "@compile/[\"matmul\",\"tile\",0,3]",
+        "shape": [
+          1,
+          2,
+          2
+        ],
+        "strides": null
+      },
+      {
+        "alias_of": null,
+        "dtype": "fp32",
+        "kind": "activation",
+        "name": "@compile/[\"matmul\",\"tile\",2,0]",
+        "shape": [
+          1,
+          1,
+          3
+        ],
+        "strides": null
+      },
+      {
+        "alias_of": null,
+        "dtype": "fp32",
+        "kind": "activation",
+        "name": "@compile/[\"matmul\",\"tile\",2,3]",
+        "shape": [
+          1,
+          1,
+          2
+        ],
+        "strides": null
+      }
+    ]
+  },
+  "schema": "arch-explorer.compilation.v1",
+  "source": {
+    "adf": {
+      "elements": [
+        {
+          "component": "sm",
+          "implementation": {
+            "id": "sm.roofline",
+            "params": {
+              "bandwidth_bytes_per_ns": {
+                "source": "explicit synthetic VAL53 input assumption; no hardware calibration",
+                "unit": "B/ns",
+                "value": 8
+              },
+              "boundary": {
+                "source": "explicit synthetic VAL53 input assumption; no hardware calibration",
+                "unit": "1",
+                "value": "component_io"
+              },
+              "peak_ops_per_ns": {
+                "source": "explicit synthetic VAL53 input assumption; no hardware calibration",
+                "unit": "op/ns",
+                "value": 16
+              }
+            },
+            "version": "1"
+          },
+          "name": "sm",
+          "params": {
+            "precision": {
+              "source": "explicit synthetic VAL53 input assumption; no hardware calibration",
+              "unit": "1",
+              "value": "fp32"
+            }
+          },
+          "type": "point"
+        },
+        {
+          "component": "dram",
+          "name": "dram",
+          "params": {
+            "bandwidth": {
+              "source": "explicit synthetic VAL53 input assumption; no hardware calibration",
+              "unit": "B/ns",
+              "value": 8
+            },
+            "capacity": {
+              "source": "explicit synthetic VAL53 input assumption; no hardware calibration",
+              "unit": "B",
+              "value": 1048576
+            },
+            "latency": {
+              "source": "explicit synthetic VAL53 input assumption; no hardware calibration",
+              "unit": "ns",
+              "value": 2
+            },
+            "technology": {
+              "source": "explicit synthetic VAL53 input assumption; no hardware calibration",
+              "unit": "1",
+              "value": "ddr"
+            }
+          },
+          "type": "point"
+        }
+      ],
+      "name": "board",
+      "networks": [],
+      "type": "matrix"
+    },
+    "mapping": {
+      "params": {
+        "compute": "board/sm",
+        "memory": "board/dram",
+        "threads_per_block": 32,
+        "tiles": {
+          "k": 2,
+          "m": 2,
+          "n": 3
+        }
+      },
+      "template": "compile_graph"
+    },
+    "workload": {
+      "kind": "graph",
+      "name": "",
+      "params": {
+        "dtype": "fp32",
+        "iterations": 1,
+        "meta": {
+          "inputs": {
+            "A": [
+              [
+                [
+                  0.125,
+                  0.25,
+                  0.375
+                ],
+                [
+                  0.5,
+                  0.625,
+                  0.75
+                ],
+                [
+                  0.875,
+                  1.0,
+                  1.125
+                ]
+              ]
+            ],
+            "B": [
+              [
+                [
+                  1.5,
+                  1.625,
+                  1.75,
+                  1.875,
+                  2.0
+                ],
+                [
+                  2.125,
+                  2.25,
+                  2.375,
+                  2.5,
+                  2.625
+                ],
+                [
+                  2.75,
+                  2.875,
+                  3.0,
+                  3.125,
+                  3.25
+                ]
+              ]
+            ]
+          }
+        },
+        "name": "matmul",
+        "operators": [
+          {
+            "attrs": {
+              "batch": 1,
+              "k": 3,
+              "m": 3,
+              "n": 5,
+              "shared_b": false
+            },
+            "inputs": [
+              "A",
+              "B"
+            ],
+            "label": "Matmul",
+            "name": "matmul",
+            "op": "matmul",
+            "outputs": [
+              "C"
+            ],
+            "type": "operator"
+          }
+        ],
+        "schema": "arch-explorer.workload-graph.v1",
+        "tensors": [
+          {
+            "alias_of": null,
+            "dtype": "fp32",
+            "kind": "activation",
+            "name": "A",
+            "shape": [
+              1,
+              3,
+              3
+            ],
+            "strides": null
+          },
+          {
+            "alias_of": null,
+            "dtype": "fp32",
+            "kind": "weight",
+            "name": "B",
+            "shape": [
+              1,
+              3,
+              5
+            ],
+            "strides": null
+          },
+          {
+            "alias_of": null,
+            "dtype": "fp32",
+            "kind": "activation",
+            "name": "C",
+            "shape": [
+              1,
+              3,
+              5
+            ],
+            "strides": null
+          }
+        ]
+      },
+      "weight": 1.0
+    }
+  },
+  "sources": {
+    "callables": [
+      {
+        "line": 141,
+        "module": "arch_explorer.workload.compiled_operators",
+        "qualname": "validate_matmul",
+        "sha256": "7a7842d65bb349b389151939811c624c7414ab6b499a1fa14f8e957ca69a11ec"
+      },
+      {
+        "line": 147,
+        "module": "arch_explorer.workload.compiled_operators",
+        "qualname": "validate_assemble",
+        "sha256": "7a7842d65bb349b389151939811c624c7414ab6b499a1fa14f8e957ca69a11ec"
+      },
+      {
+        "line": 186,
+        "module": "arch_explorer.workload.builtins",
+        "qualname": "_graph",
+        "sha256": "528bafde3ede68011441dae06bf8436ed8e3732693b01ae3247cfb2770c10bf5"
+      },
+      {
+        "line": 186,
+        "module": "arch_explorer.workload.builtins",
+        "qualname": "_graph",
+        "sha256": "528bafde3ede68011441dae06bf8436ed8e3732693b01ae3247cfb2770c10bf5"
+      },
+      {
+        "line": 186,
+        "module": "arch_explorer.workload.builtins",
+        "qualname": "_graph",
+        "sha256": "528bafde3ede68011441dae06bf8436ed8e3732693b01ae3247cfb2770c10bf5"
+      },
+      {
+        "line": 198,
+        "module": "arch_explorer.workload.full_primitives",
+        "qualname": "reference",
+        "sha256": "b97d2a9b6fc8abdfe8e658caafffbad06247f07cdab12e98f091d6054a92c605"
+      },
+      {
+        "line": 198,
+        "module": "arch_explorer.workload.full_primitives",
+        "qualname": "reference",
+        "sha256": "b97d2a9b6fc8abdfe8e658caafffbad06247f07cdab12e98f091d6054a92c605"
+      },
+      {
+        "line": 22,
+        "module": "arch_explorer.workload.builtins",
+        "qualname": "validate_basic",
+        "sha256": "528bafde3ede68011441dae06bf8436ed8e3732693b01ae3247cfb2770c10bf5"
+      },
+      {
+        "line": 22,
+        "module": "arch_explorer.workload.builtins",
+        "qualname": "validate_basic",
+        "sha256": "528bafde3ede68011441dae06bf8436ed8e3732693b01ae3247cfb2770c10bf5"
+      },
+      {
+        "line": 22,
+        "module": "arch_explorer.workload.builtins",
+        "qualname": "validate_basic",
+        "sha256": "528bafde3ede68011441dae06bf8436ed8e3732693b01ae3247cfb2770c10bf5"
+      },
+      {
+        "line": 25,
+        "module": "arch_explorer.workload.compilation_targets",
+        "qualname": "_roofline",
+        "sha256": "85bf89cdbb3f21c8ea81ad0a876d1c921aa5d44a20d9736009ce72c0081242ce"
+      },
+      {
+        "line": 251,
+        "module": "arch_explorer.workload.compiled_operators",
+        "qualname": "lower_roofline",
+        "sha256": "7a7842d65bb349b389151939811c624c7414ab6b499a1fa14f8e957ca69a11ec"
+      },
+      {
+        "line": 260,
+        "module": "arch_explorer.workload.compiled_operators",
+        "qualname": "supports",
+        "sha256": "7a7842d65bb349b389151939811c624c7414ab6b499a1fa14f8e957ca69a11ec"
+      },
+      {
+        "line": 31,
+        "module": "arch_explorer.components.dram.definition",
+        "qualname": "Dram.build",
+        "sha256": "3b8c3cb69dbd53d2cebb563030f679fa9903cb49af4f713dbde52107e46b3477"
+      },
+      {
+        "line": 31,
+        "module": "arch_explorer.components.sm.implementations.roofline",
+        "qualname": "validate",
+        "sha256": "7a7c95d47a3fa8bca1bf1591207df844809c911f2762908367b277c76ea6e18f"
+      },
+      {
+        "line": 71,
+        "module": "arch_explorer.components.sm.implementations.roofline",
+        "qualname": "factory",
+        "sha256": "7a7c95d47a3fa8bca1bf1591207df844809c911f2762908367b277c76ea6e18f"
+      },
+      {
+        "line": 83,
+        "module": "arch_explorer.workload.builtins",
+        "qualname": "lower_basic",
+        "sha256": "528bafde3ede68011441dae06bf8436ed8e3732693b01ae3247cfb2770c10bf5"
+      }
+    ],
+    "files": {
+      "components/dram/definition.py": "3b8c3cb69dbd53d2cebb563030f679fa9903cb49af4f713dbde52107e46b3477",
+      "components/sm/implementations/roofline.py": "7a7c95d47a3fa8bca1bf1591207df844809c911f2762908367b277c76ea6e18f",
+      "mapping/compilation.py": "20805d13c6ba120213df46c82779022ae21b1904573974ce1980d166429bbc9e",
+      "mapping/compiled.py": "008cd3efcdbdfc3272242d059b7493866c21ca68487863cf9eee287ce389e434",
+      "simulator/compilation.py": "0cc40c82400e2e9167f9d6a54a61dfe179a04902f8169dccab7ad007eb22b43e",
+      "workload/builtins.py": "528bafde3ede68011441dae06bf8436ed8e3732693b01ae3247cfb2770c10bf5",
+      "workload/compilation.py": "d10e328bd08cf1c01631df170de7ddc661cdf858b4d52fbb911ced7b6efc5d14",
+      "workload/compilation_targets.py": "85bf89cdbb3f21c8ea81ad0a876d1c921aa5d44a20d9736009ce72c0081242ce",
+      "workload/compiled_operators.py": "7a7842d65bb349b389151939811c624c7414ab6b499a1fa14f8e957ca69a11ec",
+      "workload/full_primitives.py": "b97d2a9b6fc8abdfe8e658caafffbad06247f07cdab12e98f091d6054a92c605"
+    }
+  },
+  "target": {
+    "id": "roofline",
+    "lower": {
+      "line": 25,
+      "module": "arch_explorer.workload.compilation_targets",
+      "qualname": "_roofline",
+      "sha256": "85bf89cdbb3f21c8ea81ad0a876d1c921aa5d44a20d9736009ce72c0081242ce"
+    },
+    "version": "1"
+  }
+}

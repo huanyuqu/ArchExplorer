@@ -1,0 +1,135 @@
+{
+  "seed_adf": {
+    "preset": "vectorcgra_4x4",
+    "parameters": {
+      "words_per_bank": 32
+    }
+  },
+  "workloads": [
+    {
+      "name": "synthetic-uint32-gemm",
+      "kind": "operator",
+      "params": {
+        "op": "matmul",
+        "m": 3,
+        "k": 2,
+        "n": 3,
+        "dtype": "uint32"
+      },
+      "weight": 1.0
+    }
+  ],
+  "backend": "events",
+  "mapping_templates": [
+    "cgra_spatial"
+  ],
+  "max_evaluations": 12,
+  "cost_budget_usd": null,
+  "area_budget_mm2": null,
+  "cost_penalty": 0.0,
+  "area_penalty": 0.0,
+  "parameter_samples": 1,
+  "mapping_samples": 4,
+  "random_seed": 17,
+  "search": {
+    "max_steps": 6,
+    "temperature": 1.0,
+    "cooling": 0.95,
+    "max_relative_degradation": 0.25
+  },
+  "agent": {
+    "max_steps": 12,
+    "max_tool_calls": 12,
+    "script": [
+      {
+        "tool": "describe_environment",
+        "args": {}
+      },
+      {
+        "tool": "get_state",
+        "args": {}
+      },
+      {
+        "tool": "checkpoint",
+        "args": {
+          "name": "seed"
+        }
+      },
+      {
+        "tool": "evaluate",
+        "args": {
+          "optimize": "parameters_and_mapping"
+        }
+      },
+      {
+        "tool": "apply_edits",
+        "args": {
+          "edits": [
+            {
+              "op": "delete",
+              "component": "vectorcgra/array/mesh"
+            },
+            {
+              "op": "create",
+              "container": "vectorcgra/array",
+              "spec": {
+                "type": "point",
+                "name": "mesh",
+                "component": "mesh2d",
+                "params": {
+                  "cols": {
+                    "value": 4,
+                    "unit": "count",
+                    "source": "[RTL config] github.com/tancheng/VectorCGRA@20ea53bfd54980acf5bc6eef4b0959a710a4dd1f/cgra/test/CgraRTL_gemm_test_from_yaml.py:166-186"
+                  },
+                  "diagonal": {
+                    "value": true,
+                    "unit": "1",
+                    "source": "[RTL] MESH/KING_MESH; github.com/tancheng/VectorCGRA@20ea53bfd54980acf5bc6eef4b0959a710a4dd1f/cgra/CgraRTL.py:61-68,192-268"
+                  },
+                  "hop_latency": {
+                    "value": 1.0,
+                    "unit": "ns",
+                    "source": "[RTL] input ChannelRTL latency=1; github.com/tancheng/VectorCGRA@20ea53bfd54980acf5bc6eef4b0959a710a4dd1f/tile/TileRTL.py:119"
+                  },
+                  "link_bandwidth": {
+                    "value": 4.0,
+                    "unit": "B/ns",
+                    "source": "[derived] one uint32 token/tick; github.com/tancheng/VectorCGRA@20ea53bfd54980acf5bc6eef4b0959a710a4dd1f/tile/TileRTL.py:119"
+                  },
+                  "rows": {
+                    "value": 4,
+                    "unit": "count",
+                    "source": "[RTL config] github.com/tancheng/VectorCGRA@20ea53bfd54980acf5bc6eef4b0959a710a4dd1f/cgra/test/CgraRTL_gemm_test_from_yaml.py:166-186"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "tool": "evaluate",
+        "args": {
+          "optimize": "mapping"
+        }
+      },
+      {
+        "tool": "restore",
+        "args": {
+          "name": "seed"
+        }
+      },
+      {
+        "tool": "best",
+        "args": {}
+      },
+      {
+        "tool": "submit",
+        "args": {
+          "selection": "best"
+        }
+      }
+    ]
+  }
+}
