@@ -1,9 +1,5 @@
-# 原生 GPU 执行与验证范围
+# Native GPU Execution and Validation Scope
 
-[原生 demo](tutorials/05-full-models.md)展示完整前向语义、程序、参考输出、mapping 和原生结果。
-周期由外部 Accel-Sim/GPGPU-Sim 执行产生，不从实测拟合或从旧预测补出。
+The [native demo](tutorials/05-full-models.md) shows complete forward semantics, programs, reference outputs, mappings, and native results. Cycles are produced by external Accel-Sim/GPGPU-Sim execution, not fitted from measurements or filled from old predictions.
 
-完整程序执行、参考数值正确性、官方框架等价和物理时延精度是不同结论。
-真实采集、公开 trace 与合成参考生成分别报告来源，缺失指令和执行缺口明确拒绝。
-历史硬件窗口、原始日志和失败结果保留在各自实验目录，不由公开 demo 自动重跑。
-运行 demo 不授予任何新的真实硬件采集或计时权限。
+Complete program execution, reference numerical correctness, official framework equivalence, and physical latency accuracy are different conclusions. Real collection, public traces, and synthetic reference generation report sources separately; missing instructions and execution gaps are explicitly rejected. Historical hardware windows, original logs, and failed results are retained in their respective experiment directories and are not automatically rerun by the public demo. Running the demo does not grant any new real hardware collection or timing permissions.

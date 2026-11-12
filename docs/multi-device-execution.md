@@ -1,13 +1,7 @@
-# 显式多设备执行的职责
+# Responsibilities of Explicit Multi-Device Execution
 
-`MappingSpec` 保存显式算子放置、张量切分、路由及本地 mapping；ADF 保存设备与互连资源。
-适用性由实际安装的 mapping/backend 检查。容量、精度、归约、依赖与通信不因分布到多个设备而省略。
-CLI 不增加设备家族判断，也不从设备数量推导新的 GPU 时延。
+`MappingSpec` saves explicit operator placement, tensor sharding, routing, and local mapping; ADF saves device and interconnect resources. Applicability is checked by the actually installed mapping/backend. Capacity, precision, reduction, dependencies, and communication are not omitted due to distribution across multiple devices. The CLI does not add device family judgment or derive new GPU latency from device count.
 
-移除自建 GPU 预测后，旧 GPU 多设备配置和相关模型计时入口不再可用。
-通用 `multi_device` 数据契约和非 GPU 能力继续保留，实际本地模板可用域应通过注册表发现。
-新的 ViT/CLIP 原生 demo 是单流完整程序；不由它宣称多 GPU 或 π0.5 分布式支持。
+After removing self-built GPU predictions, old GPU multi-device configurations and related model timing entries are no longer available. The common `multi_device` data contract and non-GPU capabilities remain, and actual local template available domains should be discovered through the registry. The new ViT/CLIP native demo is a single-stream complete program; it does not claim multi-GPU or π0.5 distributed support.
 
-输入中的设备路径、算子身份、sharding 和路由必须完整绑定，缺失/空/非法显式请求被拒绝。
-隐式发现跳过未请求的结构化模板，未通过能力检查不生成 Evaluation。
-重放使用原 ADF、WorkloadSpec 和完整 MappingSpec，不删去不支持字段来冒充原执行。
+Device paths, operator identities, sharding, and routing in the input must be fully bound; missing/empty/illegal explicit requests are rejected. Implicit discovery skips unrequested structured templates, and no Evaluation is generated if capability checks fail. Replay uses the original ADF, WorkloadSpec, and complete MappingSpec, without deleting unsupported fields to fake the original execution.

@@ -131,7 +131,7 @@ and [component inventory](docs/component-inventory.md).
 
 ## Native GPU program demo
 
-The [ViT/CLIP tutorial (中文)](docs/tutorials/05-full-models.md) follows a complete
+The [ViT/CLIP tutorial (Chinese)](docs/tutorials/05-full-models.md) follows a complete
 small forward workload through an ADF, two mappings, program preparation,
 capability checks and native Accel-Sim execution. The frontend requires the
 complete-program backend and an explicit external engine manifest. Missing

@@ -1,80 +1,80 @@
 ---
 name: arch-explorer-workload
-description: 为 ArchExplorer 接入新的算子或负载图，编写独立可安装扩展并在自定义ADF上验证mapping与仿真。适用于新增计算语义或图结构，不要求每个新模型重写硬件组件。
+description: Connect new operators or workload graphs to ArchExplorer, write independently installable extensions, and verify mapping and simulation on custom ADFs. Suitable for adding new computational semantics or graph structures; does not require rewriting hardware components for every new model.
 metadata:
   id: skill_1b068ddcfd93
 ---
 
-# 新负载接入
+# New Workload Integration
 
-先找用户安装版本对应的 `docs/operator-implementations.md` 和
-`examples/extensions/operator_implementations/`。兼容单lower/外部row策略另见
-`docs/workload-extensions.md`。阅读公开API和实际命令后编写扩展，不修改主库模型名单，
-也不把自动PyTorch/ONNX导入或任意ISA支持作为已有功能。
+First find `docs/operator-implementations.md` and
+`examples/extensions/operator_implementations/` corresponding to the user's installed version. For compatible single-lower/external-row strategies, see also
+`docs/workload-extensions.md`. Read the public API and actual commands before writing extensions; do not modify the main library's model list,
+and do not treat automatic PyTorch/ONNX import or arbitrary ISA support as existing functionality.
 
-区分三类工作：
-- 新图由已有算子组成：定义张量、算子与依赖，直接复用语义和执行模型。
-- 真正新算子：定义shape/dtype/属性、语义与数值参考，再注册所需目标的执行实现。
-- 新硬件机制：另接组件执行模型；同一算子可以有多种硬件实现。
+Distinguish three types of work:
+- New graph composed of existing operators: define tensors, operators, and dependencies, directly reusing semantics and execution models.
+- Truly new operator: define shape/dtype/attributes, semantics, and numerical reference, then register execution implementations for the required targets.
+- New hardware mechanism: connect a component execution model separately; the same operator can have multiple hardware implementations.
 
-## 公共语义接口
+## Public Semantic Interface
 
-扩展合同位于 `arch_explorer.workload.api`：语义/图类型、OperatorDefinition、ImplementationDefinition、
-ExecutionProgram/ExecutionStep、注册与选择接口。先确认匹配版本实际提供这些符号；缺失时报告，
-不能绕过校验或猴补白名单。
+The extension contract is in `arch_explorer.workload.api`: semantic/graph types, OperatorDefinition, ImplementationDefinition,
+ExecutionProgram/ExecutionStep, registration and selection interfaces. First confirm that the matching version actually provides these symbols; if missing, report it,
+and do not bypass validation or monkey-patch whitelists.
 
-OperatorDefinition拥有validate、version和可选reference(op, inputs)，输入是只读ndarray；
-实现定义拥有稳定ID/version、operator、target、requirements/dtypes/supports及lower(op, context)。
-语义不随硬件速率改变，attrs按算子自己的规则验证。旧三参数lower是legacy:<op>兼容适配，
-不是同一语义只许一个实现的限制。
+OperatorDefinition has validate, version, and optional reference(op, inputs), where inputs are read-only ndarrays;
+implementation definitions have stable ID/version, operator, target, requirements/dtypes/supports, and lower(op, context).
+Semantics do not change with hardware speed; attrs are validated according to the operator's own rules. The old three-parameter lower is a legacy:<op> compatibility adapter,
+not a restriction that the same semantics may only have one implementation.
 
-`Workload.to_dict()/from_dict()`保存图；`WorkloadSpec('graph', graph.to_dict())`表示已有图。可选注册builder用于参数化图生成：`register_workload(kind, builder)`，builder(params, *, tp=1)返回Workload。自定义kind只是生成图的便捷入口，非每个新图的必选步骤。
+`Workload.to_dict()/from_dict()` saves the graph; `WorkloadSpec('graph', graph.to_dict())` represents an existing graph. Optionally register a builder for parameterized graph generation: `register_workload(kind, builder)`, where builder(params, *, tp=1) returns a Workload. A custom kind is only a convenience entry for graph generation, not a required step for every new graph.
 
-普通单设备events图优先用execution_graph：按节点指定implementations，选择first/round_robin、
-serialize及可选memory。复用图依赖/放置/存储基础，不复制run_device。两个兼容实现存在时必须
-消除歧义；显选不存在、目标/能力/dtype/shape/layout不兼容都应在准备输出前拒绝。
-旧GSM/DMC适配保留各自限制，不能因算子未知静默跳过。复杂布局/切分可扩展专门策略，
-固定tile或未试跑的选择不能称最优。
+For ordinary single-device events graphs, prefer execution_graph: specify implementations per node, choose first/round_robin,
+serialize, and optional memory. Reuse graph dependency/placement/storage foundations; do not copy run_device. When two compatible implementations exist, ambiguity must be
+resolved; explicitly selected nonexistence, target/capability/dtype/shape/layout incompatibility should all be rejected before preparing output.
+Old GSM/DMC adapters retain their respective limitations; do not silently skip unknown operators. Complex layouts/tiling can extend dedicated strategies;
+a fixed tile or an untested selection cannot be called optimal.
 
-具体schema、图输入输出及拓扑规范以公开教程为准。保持分支、共享权重、精度与依赖；模型中无依赖的部分才可并行。拒绝未知引用、重复生产者和依赖环；不把一张图拆成加权独立workloads来绕过图限制。
+Specific schemas, graph inputs/outputs, and topology specifications follow the public tutorials. Preserve branches, shared weights, precision, and dependencies; only parts of the model without dependencies can be parallelized. Reject unknown references, duplicate producers, and dependency cycles; do not split one graph into weighted independent workloads to bypass graph restrictions.
 
-## 实现和接入
+## Implementation and Integration
 
-涉及不同目标共同编译表达时，使用 `workload.api.compile_workload/validate_compilation`
-及 `simulator.api.prepare_compiled`。`compile_graph_v2` 的region计算、索引、K循环、
-tile张量/assembly、访问与inspection由注册OperatorMapping回调拥有；公共编译器只编排，不在用户脚本复写。
-公共任务通过按组件路径的 `AdapterBinding` 选 `TaskAdapter`，由其lower/restore负责组输入转换。
-`ImplementationDefinition` 仍是算子lower，`ComponentImplementation` 仍拥有模型工厂和计时资源。
-公共mapping的v3包含compute/memory/rules/operator_rules；逐实例覆盖优先于kind默认和唯一规则。规则ID/version/options由各规则验证，专参属于适配器options，执行选项另传prepare。
-同执行域支持的组保留共同依赖/最后读者，缺跨域桥时拒绝，不独立计时相加。示例及FP32/连续matmul边界见
-`docs/compilation.md`和`docs/attention.md`。新编译是v3，v1/v2显式迁移；保留显式输入和原DAG两个读者，不把图压成FLOPs后猜指令。
-公开编译支持连续物化FP32/FP16/BF16 storage、FP32 accumulation和逐物化输出舍入；复用workload.api.round_storage，不在扩展/用户脚本复制舍入实现。
-完整pre-LN block由公开transformer_encoder_block构图；多层用transformer_encoder和compose_workloads。CORE场景只生成显式数据/配置并调用公共函数，不预计算层间activation。默认reshape/transpose物化；layout_candidates给同一图的materialized/views完整mapping，不能共享的reshape显式保留物化，不自己计算strides或复制假装view。
-同dtype只读view保留位值，不新加舍入；不同dtype需cast。resolve_layout给根storage、元素strides/offset和完整allocation_bytes，BF16 host FP32数组仍按2B存储计费。只读正步长slice/transpose/可共享reshape需适配器声明readonly_strided；旧independent-only外包在lower前明确拒绝别名任务，不冒充具备strided能力。任意as_strided、零/负步长、dtype重解释、alias写入仍拒绝。
-当前设备仍声明FP32算术服务，低精度promotion/rounding另计转换需求，不猜加速倍率。view没有复制但真实读者仍付访存；根只分配一次，小输出view可能保留完整根。读写服务看access，分配看allocations，运行峰值看真实分配/释放，不用逻辑张量求和替代。旧非编译范围保持；native精度/ISA另经公开assessment，本轮不新跑native。
-精确输入、norm/GELU定义及场景见docs/precision-transformer.md和examples/transformer_block/README.md；未知扩展保持自己的精度声明。
-多层布局比较和十二预算配置见docs/multilayer-encoder.md及examples/multilayer_encoder/README.md；单布局控制六预算。保存的有效规则、root布局和resolver/builder/adapter来源必须严格校验，不能靠替换字段迁移旧已绑定结果。
-完整公共ViT入口见docs/vit-compilation.md及examples/vit_compilation/README.md；只传图像与完整根参数，构图/布局/数值使用公开workload API，不复制patch或GELU公式。ViT保持erf精确GELU、epsilon=1e-12及其声明的存储边界，不能把tanh encoder改名替代；旧ViT/CLIP原生结果不迁称公共编译结果。布局/逐实例mapping/硬件比较走同一既有搜索器，未知外包保留其FP32/连续能力范围。
-完整公共CLIP入口见docs/clip-compilation.md及examples/clip_compilation/README.md；同一图保留图像塔、causal文本塔与两个矩形相似度输出，只供图像/token IDs/完整根参数。QuickGELU、epsilon=1e-5、first-argmax EOT、无epsilon的L2与FP32 logit_scale顺序归公开语义，不能套ViT/tanh块或移动低精度舍入边界。token/EOT保持int32，不截断/浮点化；外部非法NaN/inf不能借内部mask sentinel放行。查composition身份和layout_candidates，不猜塔/层名字或复制索引流量/布局公式。输出共享根的保留、全embedding容量与重复索引访问分别核对；新BF16存储不宣称旧CLIP或官方混精度等价。
-探索仍调用既有Env/search；compilation配置接公开编译流程，每个候选尝试计预算，保留失败；保存compiled-result作为只读依据。
-新编译搜索结果replay不执行；需要新执行时显式rerun。旧ADF结果保留原再评估行为。
+When different targets share a common compiled expression, use `workload.api.compile_workload/validate_compilation`
+and `simulator.api.prepare_compiled`. `compile_graph_v2`'s region computation, indexing, K loops,
+tile tensors/assembly, access, and inspection are owned by registered OperatorMapping callbacks; the public compiler only orchestrates and is not rewritten in user scripts.
+Public tasks select `TaskAdapter` via `AdapterBinding` along component paths, and its lower/restore handles group input conversion.
+`ImplementationDefinition` is still operator lowering, and `ComponentImplementation` still owns the model factory and timing resources.
+Public mapping v3 includes compute/memory/rules/operator_rules; per-instance overrides take precedence over kind defaults and unique rules. Rule IDs/versions/options are validated by each rule, dedicated parameters belong to adapter options, and execution options are passed separately to prepare.
+Groups supported by the same execution domain retain common dependencies/last readers; when cross-domain bridges are missing, reject rather than independently timing and summing. For examples and FP32/contiguous matmul boundaries, see
+`docs/compilation.md` and `docs/attention.md`. New compilation is v3; v1/v2 are explicitly migrated; preserve explicit inputs and both readers of the original DAG, and do not compress the graph into FLOPs and then guess instructions.
+Public compilation supports contiguous materialized FP32/FP16/BF16 storage, FP32 accumulation, and per-materialization output rounding; reuse workload.api.round_storage, and do not copy rounding implementations in extensions or user scripts.
+Complete pre-LN blocks are composed by the public transformer_encoder_block; multi-layer uses transformer_encoder and compose_workloads. CORE scenarios only generate explicit data/configuration and call public functions; do not precompute inter-layer activations. Default reshape/transpose are materialized; layout_candidates provide complete mappings of materialized/views for the same graph; reshapes that cannot be shared explicitly retain materialization, and do not compute strides yourself or copy fake views.
+Same-dtype read-only views preserve bit values and do not add new rounding; different dtypes require cast. resolve_layout provides root storage, element strides/offset, and complete allocation_bytes; BF16 host FP32 arrays are still billed as 2B storage. Read-only positive-stride slice/transpose/shareable reshape requires the adapter to declare readonly_strided; old independent-only external packages explicitly reject aliasing tasks before lowering and do not pretend to have strided capability. Arbitrary as_strided, zero/negative strides, dtype reinterpretation, and alias writes are still rejected.
+Current devices still declare FP32 arithmetic services; low-precision promotion/rounding is billed separately as conversion requirements; do not guess acceleration multipliers. Views have no copy but real readers still pay for memory access; roots are allocated only once, and small output views may retain the complete root. Read/write services look at access, allocation looks at allocations, and runtime peaks look at actual allocation/deallocation, not the sum of logical tensors as a substitute. Old non-compiled scopes remain; native precision/ISA goes through public assessment separately, and native is not newly run in this round.
+For exact inputs, norm/GELU definitions, and scenarios, see docs/precision-transformer.md and examples/transformer_block/README.md; unknown extensions keep their own precision declarations.
+For multi-layer layout comparison with a budget of twelve evaluations, see docs/multilayer-encoder.md and examples/multilayer_encoder/README.md; the single-layout control has a budget of six evaluations. Saved valid rules, root layouts, and resolver/builder/adapter sources must be strictly validated; do not migrate old bound results by replacing fields.
+For the complete public ViT entry, see docs/vit-compilation.md and examples/vit_compilation/README.md; only pass images and complete root parameters; graph construction/layout/numerics use the public workload API; do not copy patch or GELU formulas. ViT maintains erf-exact GELU, epsilon=1e-12, and its declared storage boundaries; do not rename a tanh encoder as a substitute; old ViT/CLIP native results are not migrated and claimed as public compilation results. Layout/per-instance mapping/hardware comparison go through the same existing searcher; unknown external packages retain their FP32/contiguous capability scope.
+For the complete public CLIP entry, see docs/clip-compilation.md and examples/clip_compilation/README.md; the same graph preserves the image tower, causal text tower, and two rectangular similarity outputs, and only supplies images/token IDs/complete root parameters. QuickGELU, epsilon=1e-5, first-argmax EOT, L2 without epsilon, and FP32 logit_scale order belong to public semantics; do not apply ViT/tanh blocks or move low-precision rounding boundaries. token/EOT remain int32; do not truncate or float them; external illegal NaN/inf cannot be passed through by borrowing internal mask sentinels. Check composition identity and layout_candidates; do not guess tower/layer names or copy index traffic/layout formulas. Output shared-root retention, full embedding capacity, and duplicate index access are checked separately; new BF16 storage is not claimed as equivalent to old CLIP or official mixed precision.
+Exploration still calls the existing Env/search; compilation configurations connect to the public compilation flow, each candidate attempt counts toward the budget, and failures are preserved; save compiled-result as read-only evidence.
+New compilation search result replay does not execute; when new execution is needed, explicitly rerun. Old ADF results retain their original re-evaluation behavior.
 
-从独立示例复制最小所需部分到用户包，使用自己的命名空间。入口点 `arch_explorer.components` 的无参数register()可注册算子、builder、mapping与组件。注册只声明能力，不运行仿真。
+Copy the minimal required parts from independent examples into the user package, using your own namespace. The entry point `arch_explorer.components`'s parameterless register() can register operators, builders, mappings, and components. Registration only declares capabilities; it does not run simulation.
 
-已有Kernel足够时复用；多步实现返回有显式deps、内部Tensor与输入/输出的ExecutionProgram。
-临时量容量、最后消费者和释放走公共存储计划，分支临时量由框架隔离。特殊策略才扩展mapping；
-无法表达的操作明确拒绝，不伪装成matmul或填固定时延。仅计算型示例明示没有存储网络模型。
+Reuse existing Kernels when sufficient; multi-step implementations return an ExecutionProgram with explicit deps, internal Tensors, and inputs/outputs.
+Temporary capacity, last consumers, and deallocation go through the public storage planner; branch temporaries are isolated by the framework. Extend mapping only for special strategies;
+operations that cannot be expressed are explicitly rejected, not disguised as matmul or filled with fixed latency. Compute-only examples explicitly state that there is no storage network model.
 
-GPU目标使用组件公开emitter合同注册target=accelsim的实现；图/输入/reference仍属于workload或
-外包。GPU provider不识别新模型名，不能改kind/metadata假装ViT/CLIP，也不新建专用provider绕过。
-先核FP32/ISA/单设备/拓扑等真实限制；native组件路径与oracle使用同输入、独立输出和公共比较器。
+GPU targets use the component public emitter contract to register target=accelsim implementations; graphs/inputs/references still belong to the workload or
+external package. GPU providers do not recognize new model names; do not change kind/metadata to pretend to be ViT/CLIP, and do not create dedicated providers to bypass.
+First verify real limitations such as FP32/ISA/single-device/topology; native component paths and oracles use the same inputs, independent outputs, and the public comparator.
 
-## 证明外部可用
+## Proving External Usability
 
-安装主包与扩展wheel，离开源码目录，使用实际公共API和CLI运行。至少覆盖用户需要的新图与算子、一个可信小输入、mapping变化及硬件参数变化。检查变化是否进入真实任务，不能只修改报告标签。检查不支持的dtype/shape/mapping会在执行前拒绝，并保存可重放结果。
+Install the main package and extension wheel, leave the source directory, and run using the actual public API and CLI. At minimum cover the new graph and operators the user needs, one trusted small input, mapping variations, and hardware parameter variations. Check that changes enter the real task, not just modify report labels. Check that unsupported dtype/shape/mapping are rejected before execution, and save replayable results.
 
-数值参考与时序/资源检查分别保存证据；性能结果不证明张量值。绑定实际语义/参考/执行实现的
-版本和源码、mapping及输入字节，插件变动后旧结果只读重放应拒绝。核注册冲突及失败回滚，
-不能静默换实现。TP/多设备/外部引擎能力分别确认，不对任意新图默认支持。
-native前台/物理尾部分别比较，主延迟取物理final，尾部不是新kernel；只读重放不执行native。
-交付外包、ADF、图、映射、来源和可执行命令，不修改通用scheduler或CLI的身份分支。
+Numerical reference and timing/resource checks save evidence separately; performance results do not prove tensor values. Bind the versions and source of actual semantics/reference/execution implementations,
+mapping, and input bytes; after plugin changes, old results should be rejected on read-only replay. Check registration conflicts and failure rollback;
+do not silently switch implementations. TP/multi-device/external engine capabilities are confirmed separately; arbitrary new graphs are not supported by default.
+Native foreground/physical tail are compared separately; the main latency takes the physical final, and the tail is not a new kernel; read-only replay does not execute native.
+Deliver external packages, ADFs, graphs, mappings, sources, and executable commands; do not modify the general scheduler or CLI identity branches.

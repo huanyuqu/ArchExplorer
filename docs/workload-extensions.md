@@ -1,12 +1,8 @@
-# 从 ADF 文件运行自己的算子图
+# Running Your Own Operator Graph from an ADF File
 
-需要同一语义的多个目标实现、显式选择或多步/临时张量时，先读
-[外部执行实现教程](operator-implementations.md)与
-[独立实现包](../examples/extensions/operator_implementations/README.md)。它使用公共 execution_graph
-处理普通图的放置和存储；下面保留单 lower 与自定义 row mapping 的兼容示例。
+When you need multiple target implementations of the same semantics, explicit selection, or multi-step/temporary tensors, first read the [external execution implementation tutorial](operator-implementations.md) and the [standalone implementation package](../examples/extensions/operator_implementations/README.md). It uses the public execution_graph to handle placement and storage for ordinary graphs; the compatibility example with a single lower and custom row mapping is retained below.
 
-先准备一个 ADF 文件，再把它读成内存描述，最后由框架生成可执行模型。
-下面假定文件已经存在；首次使用时先完成下一节的安装与 generate，再执行这段读取代码：
+First prepare an ADF file, then read it into an in-memory description, and finally have the framework generate an executable model. The following assumes the file already exists; for first-time use, complete the installation and generate steps in the next section before executing this reading code:
 
 ```python
 import json
@@ -18,15 +14,11 @@ adf = from_dict(adf_data)
 print(adf.to_dict())
 ```
 
-这里 `adf.json` 是硬件描述文件，`adf` 是包含组件类型、参数和来源的内存对象；二者都不是
-运行中的模拟器。注册组件的 build 将 ADF 实例化为资源，mapping 将算子图变成任务，
-`events` 执行器才调度这些任务。改变文件后须重新读取并准备请求，不能认为已准备的模型会自动更新。
+Here `adf.json` is a hardware description file, and `adf` is an in-memory object containing component types, parameters, and provenance; neither is a running simulator. The build of registered components instantiates the ADF into resources, the mapping turns the operator graph into tasks, and the `events` executor schedules those tasks. After changing the file, you must re-read it and prepare the request again; a prepared model cannot be assumed to update automatically.
 
-## 安装真实外部扩展
+## Installing Real External Extensions
 
-本教程的[独立包](../examples/extensions/workload_components/README.md)包含新算子、图构造器、
-合成阵列和外部 mapping。它不实现 provider，不修改主包的算子/模型名单、CLI 或 scheduler。
-先安装含 `arch_explorer.workload.api` 的主包；从源码分发或 checkout 根目录执行：
+The [standalone package](../examples/extensions/workload_components/README.md) for this tutorial contains new operators, graph constructors, a synthetic array, and an external mapping. It does not implement a provider, nor does it modify the main package's operator/model lists, CLI, or scheduler. First install the main package containing `arch_explorer.workload.api`; from a source distribution or checkout root, run:
 
 ```sh
 python -m pip install .
@@ -35,19 +27,13 @@ cd /tmp
 python -m ae_workload_example generate --output branch-inputs
 ```
 
-此后所有命令可在仓库外运行。没有修改搜索路径，也不需要 PyTorch、ONNX、权重或 GPU。
-自动发现使用 `arch_explorer.components` 入口点，目标 `ae_workload_example:register`。
-需要嵌入 Python 时也可显式调用同一个 register；它只注册，不执行仿真。
+After this, all commands can be run outside the repository. No search path modification is needed, and PyTorch, ONNX, weights, or GPU are not required. Auto-discovery uses the `arch_explorer.components` entry point, target `ae_workload_example:register`. When embedding in Python is needed, the same register can also be called explicitly; it only registers and does not execute simulation.
 
-生成的 `adf.json` 描述两个 `tutorial_array`、一个共享 SRAM 和 bus；所有参数带单位及合成来源。
-`affine-graph.json`、`builtin-graph.json` 是两个独立图；`mappings.json` 保存两个完整映射选择。
-这些是可独立编辑的普通输入文件，不是绑定某个设备系列的 preset。
+The generated `adf.json` describes two `tutorial_array`s, one shared SRAM, and a bus; all parameters carry units and synthetic provenance. `affine-graph.json` and `builtin-graph.json` are two independent graphs; `mappings.json` stores two complete mapping selections. These are ordinary input files that can be edited independently, not presets bound to a specific device family.
 
-## 先接一个只复用已有算子的新图
+## First Connect a New Graph That Only Reuses Existing Operators
 
-`builtin-graph.json` 有两条 scale 分支和一个 add 汇合。新图的入口是
-`WorkloadSpec('graph', graph.to_dict())`，无需给主项目增加模型 kind。
-`workloads` 列表里的独立场景加权不等于这个图的依赖关系。
+`builtin-graph.json` has two scale branches and one add merge. The entry point for the new graph is `WorkloadSpec('graph', graph.to_dict())`; there is no need to add a model kind to the main project. Independent scenario weights in the `workloads` list are not equivalent to this graph's dependency relationships.
 
 ```python
 from arch_explorer.adf import WorkloadSpec
@@ -57,68 +43,47 @@ graph = Workload.from_dict(json.loads(Path("branch-inputs/builtin-graph.json").r
 spec = WorkloadSpec("graph", graph.to_dict())
 ```
 
-图是有限 JSON DAG，明确张量、算子、输入/输出及参数；不是可序列化的任意 Python 对象。
-循环、悬空张量、多个生产者、损坏 shape/dtype 和非有限数应在执行前拒绝。
-输入从所选内存初始驻留，不代表模拟了输入数据的外部采集。
-图严格要求拓扑顺序，不自动排序；前向引用和循环会拒绝。本例始终按拓扑顺序写图。
+The graph is a finite JSON DAG that explicitly specifies tensors, operators, inputs/outputs, and parameters; it is not an arbitrary serializable Python object. Loops, dangling tensors, multiple producers, corrupted shape/dtype, and non-finite numbers should be rejected before execution. Inputs initially reside in the selected memory and do not represent simulation of external acquisition of input data. The graph strictly requires topological order and does not auto-sort; forward references and cycles are rejected. This example always writes graphs in topological order.
 
-## 注册真正的新算子
+## Registering Truly New Operators
 
-公开作者入口为 `arch_explorer.workload.api`，保留同一份 Tensor、Operator 和 Workload 类型。
-`OperatorDefinition(name, validate, lower)` 是单 lower 兼容形式，适配为 events 的 `legacy:<op>`。
-新接口可分别注册语义 validate/reference/version 与 `ImplementationDefinition` 的目标 lower/support。
-`register_operator(definition)` 注册同一个定义对象，竞争名称必须报错；不在组件里分派模型名称。
+The public author entry point is `arch_explorer.workload.api`, which retains the same Tensor, Operator, and Workload types. `OperatorDefinition(name, validate, lower)` is the single-lower compatible form, adapted to events as `legacy:<op>`. The new interface can separately register semantic validate/reference/version and the target lower/support of `ImplementationDefinition`. `register_operator(definition)` registers the same definition object; competing names must raise an error; model names are not dispatched within components.
 
-示例的新操作是：
+The example's new operation is:
 
 ```text
 y = scale * x + bias
-activation = identity 或 relu
+activation = identity or relu
 ```
 
-`scale=1.25`、`bias=-0.5` 和字符串 activation 都是合法属性。验证器检查输入/输出同为 FP32
-`[rows, cols]`，并验证有限系数、属性集合和形状。它没有放宽其他内置算子的语义。
-lower 返回一个现有的 vector Kernel：每元素独立乘法和加法各一次，ReLU 再加一次 SIMD 指令。
-这是当前合成实现选择，不是把任意新算子伪装成 GEMM；不支持的 dtype/tile 明确拒绝。
+`scale=1.25`, `bias=-0.5`, and the string activation are all valid attributes. The validator checks that input/output are both FP32 `[rows, cols]`, and validates finite coefficients, attribute sets, and shapes. It does not relax the semantics of other built-in operators. The lower returns an existing vector Kernel: one independent multiply and one add per element, plus one more SIMD instruction for ReLU. This is the current synthetic implementation choice, not disguising arbitrary new operators as GEMM; unsupported dtype/tile is explicitly rejected.
 
-外部定义只需两个函数和一个稳定注册对象：
+An external definition only needs two functions and one stable registration object:
 
 ```python
 from arch_explorer.workload.api import OperatorDefinition, register_operator
 from ae_workload_example.semantics import validate_affine, lower_affine
 
-# 实际包复用其模块级 AFFINE 对象，避免每次创建竞争定义。
+# The actual package reuses its module-level AFFINE object to avoid creating competing definitions each time.
 definition = OperatorDefinition("my_affine", validate_affine, lower_affine)
 register_operator(definition)
 ```
 
-普通多步执行可返回公开 `ExecutionProgram` 与内部 Tensor，经公共图 mapping 处理依赖和存活；
-特殊放置策略或新硬件机制再扩展 mapping/组件。目标产物表达不了的语义必须拒绝，
-不能默认零时延。这里是形状和资源需求仿真，不计算张量数值，也不证明模型数值正确性。
-可选 `register_workload(kind, builder)` 仅便利构造；builder 的签名是
-`builder(params, *, tp=1)`。示例 `tutorial_branches` 明确拒绝 tp>1，不静默忽略它。
+Ordinary multi-step execution can return a public `ExecutionProgram` with internal Tensors, handled by the public graph mapping for dependencies and liveness; special placement strategies or new hardware mechanisms should extend mapping/components. Semantics that cannot be expressed by the target artifact must be rejected, not defaulted to zero latency. This is shape and resource requirement simulation; it does not compute tensor values or prove model numerical correctness. The optional `register_workload(kind, builder)` is only for convenience of construction; the builder's signature is `builder(params, *, tp=1)`. The example `tutorial_branches` explicitly rejects tp>1 and does not silently ignore it.
 
-## 自定义 mapping 和硬件
+## Custom Mapping and Hardware
 
-`tutorial_rows` 通过公开 MappingTemplate 和 MappingContext 构建任务，不调用私有调度器。
-它按行切分每个算子，在两个阵列间轮流放置；两个候选的 tile_rows 为 4 和 16。
-每份输出有独立存储分配，消费者依赖实际生产任务；两条分支没有被冒充独立加权场景。
-输入/输出流量使用 SRAM/bus 资源，容量与存活由现有执行器检查；mapping 的公开 plan
-强制容量检查，终端输出保持至 return。
+`tutorial_rows` builds tasks through the public MappingTemplate and MappingContext, without calling the private scheduler. It splits each operator by rows and alternates placement between the two arrays; the two candidates have tile_rows of 4 and 16. Each output has independent storage allocation, and consumers depend on the actual producing tasks; the two branches are not impersonated as independent weighted scenarios. Input/output traffic uses SRAM/bus resources, and capacity and liveness are checked by the existing executor; the mapping's public plan enforces capacity checks, and terminal outputs are held until return.
 
-合成阵列每 tile 的周期数为 `launch_cycles + ceil(SIMD instructions / lanes)`，再按
-clock_ghz 转换到 ns。组件只理解 kernel、精度和资源，不认识 affine 图或用户模型名。
-改变 lanes 或 clock 应影响其资源需求；tile 粒度会改变真实任务数和启动开销。
+The synthetic array's cycles per tile are `launch_cycles + ceil(SIMD instructions / lanes)`, then converted to ns by clock_ghz. The component only understands kernels, precision, and resources; it does not recognize affine graphs or user model names. Changing lanes or clock should affect its resource requirements; tile granularity changes the real task count and launch overhead.
 
 ```sh
 python -m ae_workload_example hardware --lanes 8 --clock-ghz 2 --output faster-adf.json
 ```
 
-该 mapping 只支持两个指定阵列、共享 SRAM/bus、等形状二维 FP32 激活、维度 1–4096、
-一次迭代及无 SFU 的 SIMD lowering；不支持别名、矩阵 kernel、其他 dtype、多设备或 TP。
-更换硬件时先检查 mapping 适用性。源码中的合成公式不是物理校准；未知成本仍为 null。
+This mapping only supports the two specified arrays, shared SRAM/bus, equal-shape 2D FP32 activations, dimensions 1–4096, one iteration, and SIMD lowering without SFU; it does not support aliasing, matrix kernels, other dtypes, multiple devices, or TP. Check mapping applicability before changing hardware. The synthetic formulas in the source are not physically calibrated; unknown costs remain null.
 
-## 从文件准备、执行、比较和重放
+## Prepare, Execute, Compare, and Replay from Files
 
 ```sh
 python -m ae_workload_example scene --adf branch-inputs/adf.json \
@@ -129,11 +94,9 @@ archexplorer demo run branch-run
 archexplorer evaluate branch-run/mapping-000/result.json --output branch-replay.json
 ```
 
-使用新输出目录。scene 命令读取并校验传入文件，选 `provider='events'`，不增加新的 CLI 模型分支。
-将 graph 路径换成 builtin-graph.json，可用同一硬件与 mapping 跑已有算子的新 DAG。
-将 ADF 路径换成 faster-adf.json，可独立比较硬件变化；不要同时改图后再归因到硬件。
+Use a new output directory. The scene command reads and validates the passed files, selects `provider='events'`, and does not add a new CLI model branch. Replace the graph path with builtin-graph.json to run a new DAG of existing operators with the same hardware and mapping. Replace the ADF path with faster-adf.json to independently compare hardware changes; do not change the graph at the same time and then attribute the result to hardware.
 
-同一条 API 路径也接受上述内存描述：
+The same API path also accepts the in-memory description above:
 
 ```python
 from arch_explorer.adf import MappingSpec
@@ -146,15 +109,10 @@ assessment = assess_request(request)
 if not assessment["supported"]:
     raise ValueError(assessment["gaps"])
 result = evaluate_request(request)
-replayed = evaluate_request(result)  # 只读消费原执行收据，不再模拟
+replayed = evaluate_request(result)  # Read-only consumption of the original execution receipt; no re-simulation
 assert replayed["evaluation"] == result["evaluation"]
 ```
 
-prepare 只生成资源与任务计划；只有 evaluate/run 成功返回 Evaluation 才是本次执行结果。
-比较 `details.tutorial_rows.placements`、`details.stats.tasks`、`memory_peak`、breakdown、
-latency_ns 和参数 provenance。墙钟、预检通过或文件存在均不替代模拟结果。
-保留请求引用的原路径、原始执行收据和确切安装包；源代码或输入改变后需新 prepare。
-源绑定失败不可通过更新哈希绕过，更不能重新模拟来冒充只读重放。
+prepare only generates resources and task plans; only a successful evaluate/run returning an Evaluation is the result of this execution. Compare `details.tutorial_rows.placements`, `details.stats.tasks`, `memory_peak`, breakdown, latency_ns, and parameter provenance. Wall-clock time, passing preflight, or file existence do not substitute for simulation results. Preserve the original paths referenced by the request, the original execution receipt, and the exact installed package; after source code or input changes, a new prepare is required. Source binding failures cannot be bypassed by updating hashes, nor can re-simulation be used to impersonate read-only replay.
 
-需要让 agent 操作此流程时使用[用户 skills](agent-skills.md)；硬件组件作者的基础说明见
-[组件扩展教程](component-extensions.md)。
+When an agent needs to operate this flow, use [user skills](agent-skills.md); for hardware component authors, see the [component extension tutorial](component-extensions.md).

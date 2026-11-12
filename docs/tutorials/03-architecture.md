@@ -1,9 +1,8 @@
-# 3. 建立自己的非 GPU 架构并仿真
+# 3. Build your own non-GPU architecture and simulate
 
-前两章的投影例子使用合成 DMC：4 个 vector core，每核私有 SRAM，共享 DDR DRAM 和 mesh。
-参数来源是教学假设，没有真实 GPU 含义。原生 GPU 组件见[完整程序教程](05-full-models.md)。
+The projection examples in the previous two chapters use a synthetic DMC: 4 vector cores, each with private SRAM, shared DDR DRAM and mesh. The parameter sources are teaching assumptions and have no real GPU meaning. For native GPU components, see the [complete program tutorial](05-full-models.md).
 
-已有 ADF 文件时先读文件，再转换为内存描述；不要把文件名当作硬件模型：
+When an ADF file already exists, read the file first and then convert it to an in-memory description; do not treat the file name as the hardware model:
 
 ```python
 import json
@@ -14,8 +13,7 @@ adf = from_dict(json.loads(Path("my-dmc.json").read_text()))
 print(adf.to_dict())
 ```
 
-下面演示初次构造并保存该文件。这个 ADF 对象本身尚未实例化资源或执行算子；
-evaluate/prepare 根据注册组件和 mapping 生成执行模型。更改文件后需要重新读取和准备。
+The following demonstrates constructing and saving this file for the first time. This ADF object itself has not yet instantiated resources or executed operators; evaluate/prepare generates the execution model based on registered components and mapping. After changing the file, it needs to be re-read and prepared.
 
 ```python
 import json
@@ -34,13 +32,8 @@ with open("my-dmc.json", "w") as file:
     json.dump(adf.to_dict(), file, indent=2)
 ```
 
-比较 core 数时重新调用 `dmc_adf(num_cores=...)`，让网络端点数与拓扑匹配。
-所有参数保留单位和来源；容量不足时保留失败，不能关闭检查冒充原场景。
-构造新 ADF 时显式声明 compute、memory、network，模板按结构检查合法性。
-[组件契约](../components.md)和[结构编辑](../structure.md)说明复用方式。
+When comparing core counts, call `dmc_adf(num_cores=...)` again so that the number of network endpoints matches the topology. All parameters retain units and sources; when capacity is insufficient, retain the failure and do not disable checks to impersonate the original scenario. When constructing a new ADF, explicitly declare compute, memory, and network; the template checks validity by structure. [Component contracts](../components.md) and [structure editing](../structure.md) explain reuse methods.
 
-想同时接入新算子图和自定义阵列，可使用[独立负载包教程](../workload-extensions.md)。
-其中的硬件来自独立 ADF JSON，lanes 和 clock_ghz 是两个显式参数，mapping 的不同 tile
-会产生不同任务；组件不根据完整模型名称分支。
+To simultaneously connect a new operator graph and a custom array, use the [standalone workload package tutorial](../workload-extensions.md). The hardware there comes from a standalone ADF JSON; lanes and clock_ghz are two explicit parameters, and different tiles of the mapping produce different tasks; components do not branch based on complete model names.
 
-继续阅读：[探索与结果分析](04-exploration.md)。
+Continue reading: [Exploration and result analysis](04-exploration.md).

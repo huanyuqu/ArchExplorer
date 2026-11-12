@@ -1,18 +1,12 @@
-# 外部算子：语义、目标实现与图映射
+# External Operators: Semantics, Target Implementations, and Graph Mapping
 
-先读用户的 ADF、图和输入，再选择目标能力及执行实现。新算子的数学规则在用户包中，
-执行实现负责将它转为某个目标支持的产物；mapping 选择实现、放置、搬运和存储，组件与
-simulator 负责真实机制和调度。新增算子不需要给 GPU provider、调度器或 CLI 增加名字分支。
+First read the user's ADF, graph, and inputs, then select target capabilities and execution implementations. The mathematical rules for new operators live in the user package; the execution implementation is responsible for turning them into artifacts supported by a target; mapping selects implementations, placement, movement, and storage; components and the simulator handle real mechanisms and scheduling. Adding a new operator does not require adding name branches to GPU providers, schedulers, or the CLI.
 
-本文的[独立包](../examples/extensions/operator_implementations/README.md)定义主库未知的
-`example_shifted_square`：FP32 `y=(x+shift)*(x+shift)`。两条分支的 shift 分别为 1.25 和 -0.5，
-add 汇合后再以 shift=0.25 计算最终输出。图名是普通用户名字，不选择某个内置模型。
-四分之一整数的合成输入允许用独立有理数运算生成精确预期，不依赖设备的时间模型。
+The [standalone package](../examples/extensions/operator_implementations/README.md) in this document defines `example_shifted_square`, unknown to the main library: FP32 `y=(x+shift)*(x+shift)`. The two branches have shifts of 1.25 and -0.5 respectively, merge at the add, and then compute the final output with shift=0.25. The graph name is an ordinary user name and does not select a built-in model. Synthetic inputs of quarter integers allow exact expected values to be generated using independent rational arithmetic, without depending on the device's timing model.
 
-## 安装与最小事件流程
+## Installation and Minimal Event Flow
 
-需要同时提供公开 `ImplementationDefinition`、`ExecutionProgram` 和 `execution_graph` 的主包。
-旧的单 lower 接口本身不提供此能力。先安装匹配主包，再单独安装外包：
+The main package must provide the public `ImplementationDefinition`, `ExecutionProgram`, and `execution_graph` simultaneously. The old single-lower interface alone does not provide this capability. First install the matching main package, then install the external package separately:
 
 ```sh
 python -m pip install /ABS/FRAMEWORK/arch_explorer-0.2.0-py3-none-any.whl
@@ -25,42 +19,31 @@ archexplorer demo run square-events
 archexplorer evaluate square-events/mapping-000/result.json --output square-replay.json
 ```
 
-框架先构建，外包后安装；主库、provider 和调度器无需因该算子变化。入口点为
-`arch_explorer.components` 的 `ae_operator_implementations:register`，只注册，不执行。
-全程不设置 PYTHONPATH、不插入源码目录、不做 monkeypatch。生成的输入是普通 JSON，可编辑后重新准备。
+The framework is built first, and the external package is installed afterward; the main library, providers, and scheduler do not need to change because of this operator. The entry point is `ae_operator_implementations:register` in `arch_explorer.components`, which only registers and does not execute. Throughout the process, do not set PYTHONPATH, do not insert source directories, and do not monkeypatch. The generated inputs are ordinary JSON and can be edited and re-prepared.
 
-`adf.json` 使用已有 vector_unit、SRAM、DRAM、bus。所有参数带单位及合成来源，没有自建 provider。
-`graph.json` 是有分支/汇合的严格拓扑图，`inputs.json` 与 `expected.json` 是小数组及独立数值预期。
-`mappings.json` 含两个显式实现选择；`events-scene.json` 是给通用 demo 的完整场景。
-改变 ADF 后先重新读取，再准备请求；事件性能结果本身不计算张量值。
+`adf.json` uses the existing vector_unit, SRAM, DRAM, and bus. All parameters carry units and synthetic sources; no custom provider is created. `graph.json` is a strict topological graph with branches/merges; `inputs.json` and `expected.json` are small arrays and independent numeric expectations. `mappings.json` contains two explicit implementation selections; `events-scene.json` is a complete scene for the generic demo. After changing the ADF, re-read it first, then prepare the request; event performance results themselves do not compute tensor values.
 
-## 语义与实现分别注册
+## Registering Semantics and Implementations Separately
 
 ```python
 from arch_explorer.workload.api import register_operator
 from ae_operator_implementations import SEMANTIC
 
-register_operator(SEMANTIC)  # 和自动发现复用同一个稳定对象，身份幂等
+register_operator(SEMANTIC)  # reuses the same stable object as auto-discovery; identity is idempotent
 ```
 
-外包的模块级对象通过 `OperatorDefinition(OPERATOR, validate, version='1', reference=reference)` 构造。
-语义检查输入/输出形状、FP32 dtype 和有限 shift。reference 接收按输入顺序排列的只读 ndarray，
-返回输出 ndarray；它不调度、不选择组件。数值参考正确、时序/资源正确、native 软件一致性是
-分别证明的事情，不能互相替代。
+The external package's module-level object is constructed via `OperatorDefinition(OPERATOR, validate, version='1', reference=reference)`. Semantic checks validate input/output shapes, FP32 dtype, and finite shift. reference receives read-only ndarrays in input order and returns an output ndarray; it does not schedule or select components. Numerical reference correctness, timing/resource correctness, and native software consistency are proven separately and cannot substitute for one another.
 
-执行实现拥有稳定 ID/version、目标、dtype、要求及 supports。此例的两个 events 实现：
+Execution implementations have stable IDs/versions, targets, dtypes, requirements, and supports. The two events implementations in this example:
 
-- `example.shifted_square.single`：一个 vector Kernel，每元素两次 SIMD 运算；不是将两次运算伪装成一次 FMA。
-- `example.shifted_square.steps`：shift 与 square 两个有依赖的步骤，声明一个内部临时 Tensor。
+- `example.shifted_square.single`: one vector Kernel, two SIMD operations per element; it does not disguise two operations as a single FMA.
+- `example.shifted_square.steps`: two dependent steps, shift and square, declaring one internal temporary Tensor.
 
-二者都要求现有 `kernel:vector` 能力，支持 FP32 materialized 布局。真实组件仍须接受实际 Kernel，
-能力 token 不代替形状/机制校验。内部临时名字由父映射按节点隔离，分支不会共用同一缓冲；
-临时容量、最后消费者和释放走正常 storage 计划，不在用户包复制设备状态机或补一个固定延迟。
+Both require the existing `kernel:vector` capability and support FP32 materialized layout. Real components must still accept the actual Kernel; capability tokens do not replace shape/mechanism validation. Internal temporary names are isolated per node by the parent mapping; branches do not share the same buffer. Temporary capacity, last consumer, and release go through the normal storage plan; the user package does not duplicate the device state machine or add a fixed delay.
 
-旧 `OperatorDefinition(name, validate, lower)` 仍可兼容为 events 的 `legacy:<op>` 实现。
-新包把语义和目标实现分开；相同语义可有多个实现，注册顺序不能决定结果。
+The old `OperatorDefinition(name, validate, lower)` remains compatible as an events `legacy:<op>` implementation. The new package separates semantics from target implementations; the same semantics can have multiple implementations, and registration order cannot determine the result.
 
-## 公开策略选择与错误诊断
+## Public Policy Selection and Error Diagnostics
 
 ```python
 from arch_explorer.adf import MappingSpec
@@ -77,26 +60,15 @@ mapping = MappingSpec('execution_graph', {
 })
 ```
 
-`implementations` 按真实图节点选择，不是算子名白名单。两个兼容实现存在时，省略选择应拒绝
-歧义；显式 ID 不存在、目标不符、缺 capability 或 dtype/shape/layout 不支持也应拒绝。
-诊断应保留节点、实现及目标；修正输入或安装正确实现后，在新目录重新准备。
+`implementations` are selected per real graph node, not by an operator-name whitelist. When two compatible implementations exist, omitting the selection must reject ambiguity; a nonexistent explicit ID, mismatched target, missing capability, or unsupported dtype/shape/layout must also be rejected. Diagnostics should retain the node, implementation, and target; after correcting inputs or installing the correct implementation, re-prepare in a new directory.
 
-`placement` 可选 first/round_robin；`serialize=False` 保留 DAG 并行，True 是显式串行策略。
-`memory` 可选，默认该设备 DRAM。本例两种实现使用相同 round_robin/非串行/SRAM，
-因此差异来自实际步骤、临时量和存储/传输，而不是改报告标签。具体时间与峰值以实际计划为准。
-特殊策略仍可扩展，但普通单设备图不用重写 run_device。
+`placement` is optional first/round_robin; `serialize=False` preserves DAG parallelism, and True is an explicit serial policy. `memory` is optional, defaulting to that device's DRAM. In this example, both implementations use the same round_robin/non-serial/SRAM, so differences come from actual steps, temporaries, and storage/transfers, not from changing report labels. Specific times and peaks are based on the actual plan. Special policies can still be extended, but ordinary single-device graphs do not need to rewrite run_device.
 
-## GPU、来源和边界
+## GPU, Sources, and Boundaries
 
-GPU 同样选择 target=`accelsim` 的公开目标实现，组件 provider 消费可执行程序和来源。
-外部 lower 从 `context.options['emitter']` 取得本次求值的 ProgramEmitter；它不进入请求 JSON。
-本包先 load 输入、constant shift，再执行 FADD/FMUL 和 finish。多步版本通过
-`temporary('shifted', shape)`、两个 kernel 以及真实 store/load 连接；不是伪 kernel 或估算时间。
-reference 仍为同一普通语义回调。示例用 R8/R9，避开发射器的索引和地址 scratch 寄存器。
+GPU likewise selects a public target implementation with target=`accelsim`; the component provider consumes the executable program and source. The external lower obtains the ProgramEmitter for this evaluation from `context.options['emitter']`; it does not enter the request JSON. This package first loads inputs and the constant shift, then executes FADD/FMUL and finish. The multi-step version connects via `temporary('shifted', shape)`, two kernels, and real store/load; it is not a pseudo-kernel or estimated time. reference remains the same ordinary semantic callback. The example uses R8/R9, avoiding the emitter's index and address scratch registers.
 
-`graph.meta['inputs']` 明确提供所有外部输入/权重的有限数值数组，没有隐式随机填充。
-公开 `workload.reference_api.execute_reference` 执行完整图；check-reference 与独立有理数
-预期核对两条分支、汇合和输出。改写图或输入后需提供匹配参考，不能继续套用该样例 oracle。
+`graph.meta['inputs']` explicitly provides finite numeric arrays for all external inputs/weights; there is no implicit random filling. The public `workload.reference_api.execute_reference` executes the complete graph; check-reference compares against independent rational expectations for both branches, the merge, and the output. After modifying the graph or inputs, a matching reference must be provided; the sample oracle cannot be reused.
 
 ```sh
 python -m ae_operator_implementations gpu-case --graph square-inputs/graph.json --engine /ABS/ENGINE/engine.json --output square-gpu.json
@@ -104,16 +76,8 @@ python /ABS/SOURCE/examples/gpu_instantiation/workflow.py run square-gpu.json --
 python /ABS/SOURCE/examples/gpu_instantiation/workflow.py replay square-native --output square-native-replay.json
 ```
 
-这里 `/ABS/SOURCE` 是匹配的公开 source-export/sdist，workflow 复用原有 CORE 组件 GPU 比较入口。
-两个 mapping 分别是单核/32线程与多核临时量/64线程，两个因素都改变，不做单因素性能归因。
-输入图可以任意命名；新增语义与两个目标的实现都留在外包，不改 kind 假装 ViT/CLIP，
-不写第二个 provider 绕过。已有 ViT/CLIP 通过同一公开机制使用自己的图/参考适配。
+Here `/ABS/SOURCE` is the matching public source-export/sdist; the workflow reuses the original CORE component GPU comparison entry. The two mappings are single-core/32 threads and multi-core temporaries/64 threads respectively; both factors change, so no single-factor performance attribution is made. Input graphs can be named arbitrarily; new semantics and implementations for both targets remain in the external package, without changing kind to pretend to be ViT/CLIP, and without writing a second provider to bypass. Existing ViT/CLIP use their own graph/reference adaptations through the same public mechanism.
 
-请求与结果应绑定实际语义 validate/reference、执行 lower/support/version、mapping 和输入字节。
-安装包源码改变后，旧结果只读重放必须拒绝，不能默默选新的插件。重复注册和失败插件须遵循
-discovery 的冲突/回滚规则。准备失败不应留下 provider 运行输出；缺失来源不能补零或忽略。
+Requests and results should bind the actual semantic validate/reference, execution lower/support/version, mapping, and input bytes. After the installed package source changes, old results must be rejected on read-only replay; a new plugin cannot be silently selected. Duplicate registrations and failed plugins must follow discovery's conflict/rollback rules. Preparation failures should not leave provider run outputs; missing sources cannot be zero-filled or ignored.
 
-native 组件/oracle 对照需要独立进程和输出，前台逐 kernel 与物理 final/尾部分别检查。
-新 component-engine 主延迟是物理完成；保留 foreground_final/drain_ticks/drain_core_cycles，
-不把尾部当额外 kernel。CPU native 预算含 finish，单 run 至多 600 秒/8 GiB；不采集 GPU。
-合成参考生成 trace 不是框架 CUDA 实采、预训练权重或硬件精度验证。
+Native component/oracle comparison requires a separate process and output; foreground per-kernel and physical final/tail are checked separately. The new component-engine main latency is physical completion; retain foreground_final/drain_ticks/drain_core_cycles, and do not treat the tail as an extra kernel. The CPU native budget includes finish, with at most 600 seconds/8 GiB per run; GPU is not collected. Synthetic reference-generated traces are not framework CUDA real captures, pretrained weights, or hardware accuracy validation.

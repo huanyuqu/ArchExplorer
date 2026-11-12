@@ -1,28 +1,14 @@
-# 从一个组件到可安装扩展
+# From one component to an installable extension
 
-`simulator` 是通用仿真生成框架：根据 ADF 的实例与连接、负载和 mapping 生成执行计划，
-处理资源、依赖、调度和生命周期。具体硬件的参数、机制、状态机和外部引擎适配由
-`components` 拥有。Accel-Sim 保留原版 oracle 与组件实例化两种路径；新路径由通用 Runtime
-连接 SM/cluster、ICNT、L2、DRAM。不能把各组件各自计时后相加。框架通过注册能力选择执行器。
+`simulator` is a general simulation generation framework: it generates execution plans based on ADF instances and connections, workloads, and mappings, handling resources, dependencies, scheduling, and lifecycle. The parameters, mechanisms, state machines, and external engine adaptations of specific hardware are owned by `components`. Accel-Sim retains both the original oracle and component instantiation paths; the new path connects SM/cluster, ICNT, L2, and DRAM through the general Runtime. Do not time each component separately and then add them up. The framework selects executors through registered capabilities.
 
-如果新增算子只需要已有硬件能力，使用[外部目标实现](operator-implementations.md)，分别注册
-workload 语义/reference 与目标 lower/support；不用改组件或新增 provider。
-只有确实需要新硬件机制时才进入下面的组件作者流程。
+If a new operator only needs existing hardware capabilities, use [external target implementations](operator-implementations.md), registering workload semantics/reference and target lower/support separately; no component changes or new providers are needed. Only enter the component authoring process below when new hardware mechanisms are truly required.
 
-普通组件可以只实现 `ComponentType.build` 和 `Demand`，无需实现外部引擎协议。
-`arch_explorer.components.api` 提供组件作者需要的类型，重导出保留原类型身份：
-`ComponentType`、`ParamSpec`、`Conventions`、`BuildContext`、`PointModel`、`ComputeModel`、
-`MemoryModel`、`NetworkModel`、`Demand`、`Kernel`、`Provenance`、资源/任务类型，及
-`ExecutionModel`、`ExecutionRequest`、`ExecutionEvent`、`DemandAdapter`。
-扩展不需要导入 `simulator.events` 内部文件。
+Ordinary components can implement only `ComponentType.build` and `Demand`, without implementing external engine protocols. `arch_explorer.components.api` provides the types component authors need, and re-exports preserve original type identity: `ComponentType`, `ParamSpec`, `Conventions`, `BuildContext`, `PointModel`, `ComputeModel`, `MemoryModel`, `NetworkModel`, `Demand`, `Kernel`, `Provenance`, resource/task types, and `ExecutionModel`, `ExecutionRequest`, `ExecutionEvent`, `DemandAdapter`. Extensions do not need to import internal files from `simulator.events`.
 
-## 先声明参数与能力
+## Declare parameters and capabilities first
 
-[独立扩展包](../examples/extensions/synthetic_components/README.md) 中的 `TutorialMac`
-声明 `macs_per_ns`，单位 `MAC/ns`，以及只接受 `fp32` 的 `precision`。
-它的构建函数返回 `ComputeModel`；`kernel_time` 只接受 FP32 GEMM/MVM，按 MAC 数除以
-合成速率返回 ns。错误单位、布尔速率、越界值和不支持的 kernel 都应拒绝。
-参数 `source` 说明这是合成假设。面积和成本未建模，保持未知。
+`TutorialMac` in the [standalone extension package](../examples/extensions/synthetic_components/README.md) declares `macs_per_ns`, unit `MAC/ns`, and `precision` that only accepts `fp32`. Its build function returns a `ComputeModel`; `kernel_time` only accepts FP32 GEMM/MVM and returns ns by dividing the MAC count by the synthetic rate. Wrong units, boolean rates, out-of-range values, and unsupported kernels should all be rejected. The parameter `source` indicates this is a synthetic assumption. Area and cost are not modeled and remain unknown.
 
 ```python
 from arch_explorer.components.api import register_component
@@ -30,14 +16,11 @@ from ae_synthetic.component import TutorialMac
 register_component(TutorialMac)
 ```
 
-组件声明其能力，mapping 声明放置、切分和适用条件。能构建一个组件不表示任意 mapping
-都能执行它。示例将这个 MAC 替换进带显式 SRAM/DRAM/网络的单核 DMC 场景，再使用已有
-`dmc_partition` 映射运行一个 FP32 matmul。示例包的 `scenes.event_objects()` 返回标准
-ADF、WorkloadSpec 和 MappingSpec，可直接传入 `adf.evaluate`。
+Components declare their capabilities, and mappings declare placement, partitioning, and applicability conditions. Being able to build a component does not mean any mapping can execute it. The example replaces this MAC into a single-core DMC scenario with explicit SRAM/DRAM/network, then runs an FP32 matmul using the existing `dmc_partition` mapping. The example package's `scenes.event_objects()` returns standard ADF, WorkloadSpec, and MappingSpec, which can be passed directly to `adf.evaluate`.
 
-## 实际安装与发现
+## Actual installation and discovery
 
-在主项目的源码分发或 checkout 根目录执行：
+Run in the source distribution or checkout root of the main project:
 
 ```sh
 python -m pip install .
@@ -46,16 +29,14 @@ cd /tmp
 python -m ae_synthetic events --output installed-component.json
 ```
 
-扩展有自己的 `pyproject.toml` 和 `src/ae_synthetic`，不加入主项目包发现名单。
-它的入口点配置是：
+The extension has its own `pyproject.toml` and `src/ae_synthetic`, and is not added to the main project's package discovery list. Its entry point configuration is:
 
 ```toml
 [project.entry-points."arch_explorer.components"]
 tutorial = "ae_synthetic:register"
 ```
 
-无参数 `register()` 只注册描述和工厂，不执行仿真、探测设备或加载外部二进制。
-同一个函数也可在 Python 中显式调用。框架在执行前发现已安装扩展：
+The parameterless `register()` only registers descriptions and factories, and does not run simulations, probe devices, or load external binaries. The same function can also be called explicitly in Python. The framework discovers installed extensions before execution:
 
 ```python
 from arch_explorer.components.api import discover_components, providers
@@ -64,29 +45,21 @@ print(report["loaded"], report["failures"])
 print(providers())
 ```
 
-每个失败扩展单独报告，不让无关组件失效；重复名称、provider id 或不兼容版本必须明确
-报错。给自己的组件和 provider 使用唯一名称。排错时保留 discovery 的失败原因。
+Each failed extension is reported separately, without invalidating unrelated components; duplicate names, provider ids, or incompatible versions must raise explicit errors. Use unique names for your own components and providers. Keep the discovery failure reason for troubleshooting.
 
-## 需要独立引擎时注册 provider
+## Register a provider when an independent engine is needed
 
-外部引擎或必须整体执行的组件组使用 `register_provider(provider)`。对象声明稳定的
-`id`、精确 `version`、`component_types`、`execution_domain`（`single` 或 `joint`）、
-`capabilities`、精确的 `request_schemas` / `result_schemas`，并实现：
+External engines or component groups that must be executed as a whole use `register_provider(provider)`. The object declares a stable `id`, exact `version`, `component_types`, `execution_domain` (`single` or `joint`), `capabilities`, exact `request_schemas` / `result_schemas`, and implements:
 
 ```python
-prepare_request(adf, workload, mapping, *, output_dir, options=None)  # 不执行仿真
+prepare_request(adf, workload, mapping, *, output_dir, options=None)  # does not run simulation
 assess_request(payload)  # supported: bool, gaps: list
-evaluate_request(payload)  # 完整 request 与 Evaluation.to_dict()
+evaluate_request(payload)  # complete request and Evaluation.to_dict()
 ```
 
-prepare 的 payload 回显标准 `adf`、`workload`、`mapping`、`options` 字典，其他字段归
-provider 管理。结果保存完整组件请求和执行产物绑定，重放时检查来源和结果，不改写原件。
-外部引擎路径及限制放在 options；硬件参数仍来自 ADF，语义来自 WorkloadSpec。
+The prepare payload echoes the standard `adf`, `workload`, `mapping`, and `options` dictionaries; other fields are managed by the provider. Results save the complete component request and execution artifact bindings; replay checks sources and results without rewriting the originals. External engine paths and limitations go in options; hardware parameters still come from the ADF, and semantics from WorkloadSpec.
 
-示例的 `tutorial.serial_mac` 是独立合成执行域：只接受一个 `tutorial_mac`、维度
-1–64 的 FP32 matmul、`tutorial_serial` 的 `tile_m=1|2`，以及 `startup_ns`。
-该 mapping 只供此 provider 使用，不可套用事件引擎。混合组件域、BF16、其他负载和
-未知参数会拒绝。它不模拟内存、数值输出、功耗或真实硬件。
+The example's `tutorial.serial_mac` is an independent synthetic execution domain: it only accepts one `tutorial_mac`, FP32 matmul with dimensions 1–64, `tile_m=1|2` for `tutorial_serial`, and `startup_ns`. This mapping is only for this provider and cannot be applied to the event engine. Mixed component domains, BF16, other workloads, and unknown parameters are rejected. It does not simulate memory, numerical output, power, or real hardware.
 
 ```sh
 python -m ae_synthetic scene --output /tmp/mac-scene.json
@@ -95,11 +68,9 @@ archexplorer demo run /tmp/mac-run
 archexplorer evaluate /tmp/mac-run/mapping-000/result.json --output /tmp/mac-replay.json
 ```
 
-这些步骤通过安装入口点发现 provider，没有修改主项目源码或搜索路径。
-示例 128 MAC / 8 MAC/ns，加上每 tile 5 ns，两个候选分别为 36 ns 和 26 ns；
-这是公开的合成机制示例。改变 mapping 会改变真实的 tile 列表，未建模的指标仍为 null。
+These steps discover the provider through installed entry points, without modifying the main project source or search path. The example has 128 MAC / 8 MAC/ns, plus 5 ns per tile, giving two candidates of 36 ns and 26 ns; this is a public synthetic mechanism example. Changing the mapping changes the actual tile list, and unmodeled metrics remain null.
 
-## 通用生成和重放入口
+## General generation and replay entry points
 
 ```python
 from pathlib import Path
@@ -115,27 +86,16 @@ assessment = assess_request(request)
 if not assessment["supported"]:
     raise ValueError(assessment["gaps"])
 result = evaluate_request(request)
-replayed = evaluate_request(result)  # 检查已保存执行，不重跑 provider 引擎
+replayed = evaluate_request(result)  # checks saved execution, does not rerun the provider engine
 assert replayed["evaluation"] == result["evaluation"]
 ```
 
-请求外层为 `arch-explorer.simulator-request.v1`，包含 provider 的 id/version、三个标准
-spec、options、provider payload 和完整绑定。结果外层为 `arch-explorer.simulator-result.v1`，
-包含完整 request、同一 provider、原有 Evaluation 字典、provider 原始结果和绑定。
-细节原样保留；`latency_ns` 仍是 ns，不用 Python 墙钟替换。保留请求引用的文件与原路径。
-新结果和已注册的历史精确 schema 都交同一 resolver，CLI 不识别具体引擎名字。
+The request outer layer is `arch-explorer.simulator-request.v1`, containing the provider's id/version, three standard specs, options, provider payload, and complete bindings. The result outer layer is `arch-explorer.simulator-result.v1`, containing the complete request, the same provider, the original Evaluation dictionary, provider raw results, and bindings. Details are preserved as-is; `latency_ns` remains ns and is not replaced by Python wall-clock time. Preserve files referenced by the request and their original paths. New results and registered historical exact schemas are both handled by the same resolver; the CLI does not recognize specific engine names.
 
-demo 的候选集合在任何 evaluate 前完整检查：标准对象、候选标签、路径、全部请求身份和
-准备记录必须一致；先复核所有能力，再执行。重复、替换、缺失或错配的请求不能形成成功
-比较。更改任何规格或 options 后应 prepare 到新目录。
+The demo's candidate set is fully checked before any evaluate: standard objects, candidate labels, paths, all request identities, and preparation records must be consistent; all capabilities are reviewed first, then execution. Duplicate, replaced, missing, or mismatched requests cannot form a successful comparison. After changing any spec or options, prepare to a new directory.
 
-## 有状态组件和执行域
+## Stateful components and execution domains
 
-有状态机制使用公开的 `submit / next_event_time / advance`，保持反压拒绝时无副作用，
-分别报告 `consumer_ready`、`physical_complete` 和 `resource_ready`。不要把消费者可读误作
-物理写回完成，也不要绕过存活容量或资源占用。具体示例见[联合执行合同](unified-execution.md)。
+Stateful mechanisms use the public `submit / next_event_time / advance`, keeping backpressure rejection side-effect-free and reporting `consumer_ready`, `physical_complete`, and `resource_ready` separately. Do not mistake consumer readability for physical write-back completion, and do not bypass liveness capacity or resource occupancy. See [joint execution contract](unified-execution.md) for concrete examples.
 
-执行域不能任意拼接。Accel-Sim provider 的子组件需要同一次原生执行；不支持与其他
-独立引擎耦合时应在执行前拒绝。其组件实现位于 `components.accelsim`，通用 simulator
-不根据模板或 provider 名字选择专用机制。用户场景构造、CLI 模型名字和权重选择也不属于
-provider。完整 GPU 示例见[ViT/CLIP 教程](tutorials/05-full-models.md)。
+Execution domains cannot be arbitrarily concatenated. Subcomponents of the Accel-Sim provider require a single native execution; coupling with other independent engines is not supported and should be rejected before execution. Its component implementation is located in `components.accelsim`, and the generic simulator does not select specialized mechanisms based on templates or provider names. User scenario construction, CLI model names, and weight selection also do not belong to the provider. For a complete GPU example, see the [ViT/CLIP tutorial](tutorials/05-full-models.md).

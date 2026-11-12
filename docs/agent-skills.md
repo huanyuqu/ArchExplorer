@@ -1,28 +1,28 @@
-# 面向外部 agent 的 ArchExplorer skills
+# ArchExplorer skills for external agents
 
-本发行的 `skills/` 提供三个独立、可复制的skill目录：
+The `skills/` directory in this distribution provides three independent, copyable skill directories:
 
-| Skill | 用户任务 |
+| Skill | User task |
 | --- | --- |
-| [arch-explorer-run](../skills/arch-explorer-run/SKILL.md) | 准备、执行、比较与解释仿真结果 |
-| [arch-explorer-workload](../skills/arch-explorer-workload/SKILL.md) | 接入新算子、新图、mapping及自定义架构 |
-| [arch-explorer-component](../skills/arch-explorer-component/SKILL.md) | 接入组件执行模型或已有模拟器 |
+| [arch-explorer-run](../skills/arch-explorer-run/SKILL.md) | Prepare, execute, compare, and interpret simulation results |
+| [arch-explorer-workload](../skills/arch-explorer-workload/SKILL.md) | Integrate new operators, new graphs, mappings, and custom architectures |
+| [arch-explorer-component](../skills/arch-explorer-component/SKILL.md) | Integrate component execution models or existing simulators |
 
-将所需目录复制到外部agent支持的skills目录（例如Codex的 `$CODEX_HOME/skills`，未设置时 `~/.codex/skills`）。如该环境不自动发现skills，也可以明确让agent读取相应SKILL.md。无需Portal账号、内部工作区或团队运行工具。
+Copy the required directory to the skills directory supported by the external agent (for example, Codex's `$CODEX_HOME/skills`, or `~/.codex/skills` when unset). If the environment does not auto-discover skills, you can also explicitly instruct the agent to read the corresponding SKILL.md. No Portal account, internal workspace, or team run tools are required.
 
-skills引用的文档路径均相对匹配版本的ArchExplorer项目目录，复制skill后仍需让agent定位公开源码分发或对应文档。skill不会安装依赖或下载权重；实际操作由agent依据用户任务执行。可给出这样的请求：
+Documentation paths referenced by skills are relative to the matching version's ArchExplorer project directory; after copying the skill, the agent still needs to locate the public source distribution or corresponding documentation. Skills do not install dependencies or download weights; actual operations are performed by the agent according to the user task. You can give requests like these:
 
-- “读取arch-explorer-run，使用我的架构和场景，比较两个mapping并解释结果。”
-- “读取arch-explorer-workload，为一个带分支的图新增算子，在我提供的ADF上执行。”
-- “读取arch-explorer-workload，在独立包中为同一算子提供两个目标实现，其中一个含多步和临时张量，再接既有 GPU 目标。”
-- “读取arch-explorer-component，将我的SRAM模型接入现有事件框架。”
-- “读取arch-explorer-run，按匹配版本的组件实例化教程运行完整小 ViT/CLIP，并与独立 Accel-Sim oracle 做软件差分。”
+- "Read arch-explorer-run, use my architecture and scenario, compare two mappings, and explain the results."
+- "Read arch-explorer-workload, add an operator for a graph with branches, and execute it on the ADF I provide."
+- "Read arch-explorer-workload, provide two target implementations for the same operator in a standalone package, one with multiple steps and temporary tensors, then connect to the existing GPU target."
+- "Read arch-explorer-component, integrate my SRAM model into the existing event framework."
+- "Read arch-explorer-run, run a complete small ViT/CLIP following the matching version's component instantiation tutorial, and perform software differential comparison against an independent Accel-Sim oracle."
 
-GPU 组件任务先阅读 [GPU 实例化流程](gpu-instantiation.md)，检查所选版本实际支持的组件、
-事务与时钟能力。skill 的指导不构成该版本已经实现或验证这些能力的证据；两侧原始结果及
-公共比较报告才承载本次差分结论。接口未具备时明确报告，不将 whole-engine 重复执行解释为组件化。
+For GPU component tasks, first read the [GPU instantiation process](gpu-instantiation.md) and check the components,
+transactions, and clock capabilities actually supported by the selected version. The skill's guidance does not constitute evidence that this version has implemented or verified these capabilities; the raw results from both sides and
+the public comparison report carry the conclusions of this differential comparison. When the interface is not available, report it explicitly and do not interpret whole-engine repeated execution as componentization.
 
-新执行实现流程见[外部算子教程](operator-implementations.md)。先区分语义、目标实现、mapping 和
-硬件机制；普通图复用公共策略，不让 agent 为每个算子复制调度状态机或新增 provider 分支。
+For new execution implementation processes, see the [external operator tutorial](operator-implementations.md). First distinguish semantics, target implementation, mapping, and
+hardware mechanisms; ordinary graphs reuse common policies, and do not let the agent duplicate scheduling state machines or add provider branches for every operator.
 
-公开源码导出和sdist携带skills；wheel提供执行库，不保证携带这些项目级资料。skills不会把合成示例解释为真实设备精度。新增负载是否可在特定GPU引擎执行，仍由其能力合同决定。
+Public source exports and sdist carry skills; the wheel provides the execution library and does not guarantee carrying these project-level materials. Skills do not interpret synthetic examples as real device accuracy. Whether a new workload can execute on a specific GPU engine is still determined by its capability contract.

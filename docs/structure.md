@@ -1,10 +1,10 @@
-# ADF 结构编辑与三层搜索
+# ADF structure editing and three-layer search
 
-`arch_explorer.structure` 在共享 `SpaceMatrix` / `SpacePoint` 树上执行结构编辑。
-调用返回新树，原树及其所有子对象保持不变。ADF 契约本身是可变 dataclass，调用方不应
-修改已作为检查点或候选交给其他代码的树。每步编辑都通过组件注册表、参数 domain 和
-网络角色检查；不合法的编辑抛出 `StructureError`，其 `to_dict()` 包含 code、message、details。
-组件 evaluator、映射模板与事件后端由各自模块注册。
+`arch_explorer.structure` performs structural editing on the shared `SpaceMatrix` / `SpacePoint` tree.
+Calls return a new tree, and the original tree and all its child objects remain unchanged. The ADF contract itself is a mutable dataclass, and callers should not
+modify trees that have already been handed to other code as checkpoints or candidates. Each editing step is checked through the component registry, parameter domain, and
+network roles; illegal edits raise `StructureError`, whose `to_dict()` contains code, message, and details.
+Component evaluators, mapping templates, and event backends are registered by their respective modules.
 
 ```python
 from arch_explorer.archs.adf_seeds import dmc_adf
@@ -15,120 +15,120 @@ result = split(seed, "chip/dram", 4)
 assert replay(seed, [result.record]) == result.adf
 ```
 
-运行前须注册相应组件；种子只描述硬件，不提供仿真模型。`dmc_adf(num_cores=4)` 包含
-vector core、本地 SRAM、mesh 与 DRAM，参数来源为 `synthetic seed`，用于非 GPU 教学场景。
-GPU 采用 [原生程序 demo](tutorials/05-full-models.md) 的 ADF，不使用吞吐公式种子。
-CGRA 具名种子 `vectorcgra_4x4` / `vectorcgra_4x4_diag` 直接使用 `devices.get`，
-保留其 RTL 来源、场景参数及 unknown clock 标记，不复制器件常数。
+The corresponding components must be registered before running; seeds only describe hardware and do not provide simulation models. `dmc_adf(num_cores=4)` contains
+vector cores, local SRAM, mesh, and DRAM, with parameters sourced from `synthetic seed`, and is used for non-GPU teaching scenarios.
+The GPU uses the ADF from the [native program demo](tutorials/05-full-models.md), not the throughput formula seed.
+The CGRA named seeds `vectorcgra_4x4` / `vectorcgra_4x4_diag` are used directly via `devices.get`,
+preserving their RTL sources, scenario parameters, and unknown clock markers, without duplicating device constants.
 
-## 六个基本原语
+## Six basic primitives
 
-路径是类型级路径，如 `chip/core/sram`。同一 repeat 元素的所有实例共享参数。
+Paths are type-level paths, such as `chip/core/sram`. All instances of the same repeat element share parameters.
 
-| 原语 | 参数和效果 |
+| Primitive | Parameters and effects |
 | --- | --- |
-| `split` | `point, num, algo="even"`。调用组件 `split`，原点成为同名容器，内含 num 个分点。父容器继承原点的 repeat。 |
-| `merge` | `points, algo="sum", name=None`。调用组件 `merge`，合并同级、同种类型、相同 repeat 的点。可再 `remove` 去掉包裹层。 |
-| `insert` | `parent, children, name="group", group_size=None`。将直接子元素放入新容器；网络不能作为 children。 |
-| `remove` | `level`。子元素和网络提升至父级，各子节点 repeat 乘被移除层的 repeat；名称冲突时报错。 |
-| `create` | `container, spec` 或 `container, component`，二选一。spec 为完整 ADF 节点 JSON；component 为已有路径，表示移动。网络自动进入 networks。 |
-| `delete` | `component`。删除该路径的点或整个子树；不允许删除根。 |
+| `split` | `point, num, algo="even"`. Calls the component `split`; the original point becomes a container with the same name, containing num split points. The parent container inherits the original point's repeat. |
+| `merge` | `points, algo="sum", name=None`. Calls the component `merge`, merging points at the same level, of the same type, and with the same repeat. The wrapping layer can be removed again with `remove`. |
+| `insert` | `parent, children, name="group", group_size=None`. Places direct children into a new container; networks cannot be children. |
+| `remove` | `level`. Children and networks are promoted to the parent level, and each child node's repeat is multiplied by the removed layer's repeat; an error is reported on name conflicts. |
+| `create` | `container, spec` or `container, component`, choose one. spec is a complete ADF node JSON; component is an existing path, indicating a move. Networks automatically enter networks. |
+| `delete` | `component`. Deletes the point or entire subtree at that path; deleting the root is not allowed. |
 
-`split` 仅允许 compute/memory 点；通信点不能变成 networks 中的容器。
-extensive 参数依组件实现划分/相加，int 资源必须整除，clock 等 intensive 参数保持不变。
-来源说明由组件的 split/merge 实现维护。根节点保留；合并/分割不能跨兄弟集合。
+`split` is only allowed for compute/memory points; communication points cannot become containers in networks.
+Extensive parameters are divided/added according to the component implementation, int resources must divide evenly, and intensive parameters such as clock remain unchanged.
+Source descriptions are maintained by the component's split/merge implementation. The root node is preserved; merge/split cannot cross sibling sets.
 
-对 repeat 的分组使用 `insert(..., children=["chip/core"], name="chiplet", group_size=4)`。
-当 core.repeat=16，结果为 chiplet.repeat=4、core.repeat=4。此表示等价于每四个 core
-组成一组，不实例化 16 份重复 JSON。group_size 必须整除 repeat。需要分别编辑不同组时，
-可用 create 创建不同名字的显式节点，再 delete 原重复节点。跨不同父级物理倍率的
-component 移动被拒绝，以免静默复制或丢弃硬件。
+For grouping repeats use `insert(..., children=["chip/core"], name="chiplet", group_size=4)`.
+When core.repeat=16, the result is chiplet.repeat=4 and core.repeat=4. This representation is equivalent to grouping every four cores
+into one group, and does not instantiate 16 copies of repeated JSON. group_size must divide repeat evenly. When different groups need to be edited separately,
+explicit nodes with different names can be created with create, and then the original repeated node can be deleted. Moving components across different parent physical multipliers
+is rejected to avoid silently duplicating or discarding hardware.
 
-## 高层程序
+## High-level programs
 
-高层程序返回 `ProgramResult(adf, records)`，records 完全由基本编辑构成。
-`replay(seed, records)` 可以独立展开，不需要再次执行高层程序。
+High-level programs return `ProgramResult(adf, records)`, where records consist entirely of basic edits.
+`replay(seed, records)` can be expanded independently without executing the high-level program again.
 
-| 程序 | 结构效果 |
+| Program | Structural effect |
 | --- | --- |
-| `chiplet_transform(chip, cores_per_chiplet, noc_spec, nop_spec)` | 删除 chip 原网络，按组插入 chiplet，为组内创建 NoC、组间创建 NoP。支持一条重复 core 或多个显式 core。 |
-| `gsm_to_dmc(chip, shared_memory, parts)` | split 共享内存，展开直接 compute-bearing core 的 repeat，为每核插入一个含私有内存分片的 tile；添加局部 bus 与全局 mesh。parts 必须等于 core 数量。 |
-| `pim_transform(memory, level, nums, spec)` | 递归分割 memory，插入指定层级，最底层放入 spec.compute 与 spec.network。level/nums 可为单值或等长列表。 |
-| `bond_memory(core, memory_spec)` | 为每个 core 绑定一份 technology=`bonded` 的 dram；若 core 是点，先按 group_size=1 包裹。 |
+| `chiplet_transform(chip, cores_per_chiplet, noc_spec, nop_spec)` | Deletes the chip's original network, inserts chiplets by group, creates NoC within groups and NoP between groups. Supports one repeated core or multiple explicit cores. |
+| `gsm_to_dmc(chip, shared_memory, parts)` | Splits shared memory, expands the repeat of directly compute-bearing cores, and inserts a tile containing a private memory slice for each core; adds a local bus and global mesh. parts must equal the number of cores. |
+| `pim_transform(memory, level, nums, spec)` | Recursively splits memory, inserts at the specified levels, and places spec.compute and spec.network at the lowest level. level/nums can be single values or equal-length lists. |
+| `bond_memory(core, memory_spec)` | Binds one dram with technology=`bonded` to each core; if core is a point, it is first wrapped with group_size=1. |
 
-NoC/NoP/总线 spec 必须指向 network 角色。GSM→DMC 默认的 bus、mesh 参数都标为
-synthetic seed，可通过 `bus_spec`、`noc_spec` 显式替换。`pim_unit` 已注册，合法规格可用于
-`pim_transform`，并由 `pim_offload` 执行受支持的 GEMV；缺少必需参数时报告具体参数错误。
-真正未注册的组件仍返回 `unsupported_component`。`pim_transform` 在私有副本中批量构造，
-最后验证整树，保留逐条 split/insert/create 记录供独立重放；失败不修改输入。论文三个变换
-例子的手写基本编辑与高层程序的规范化等价性见 `tests/core/test_structure.py`。
+NoC/NoP/bus specs must point to network roles. The default bus and mesh parameters for GSM→DMC are marked as
+synthetic seed, and can be explicitly replaced via `bus_spec` and `noc_spec`. `pim_unit` is registered, and legal specs can be used for
+`pim_transform`, with supported GEMV executed by `pim_offload`; specific parameter errors are reported when required parameters are missing.
+Genuinely unregistered components still return `unsupported_component`. `pim_transform` constructs in a private copy in batches,
+validates the entire tree at the end, and preserves individual split/insert/create records for independent replay; failure does not modify the input. The equivalence between hand-written basic edits for the three paper transformation
+examples and the normalized high-level programs is shown in `tests/core/test_structure.py`.
 
-## 规范形式
+## Canonical form
 
-`normalize` 从叶子向根处理，保持根不变；一个子容器满足 repeat=1、无网络、只有一个
-元素，且提升该元素不会造成同名冲突时，将其展开。所有兄弟元素及网络按名字排序。
-保留有网络、重复、多个子元素、空容器以及会造成名称冲突的层级；保留参数值、source
-和元素名字。规范化是幂等的，不承诺检测任意图同构或别名架构。
+`normalize` processes from leaves toward the root, keeping the root unchanged; when a child container satisfies repeat=1, has no network, has only one
+element, and promoting that element would not cause a name conflict, it is expanded. All sibling elements and networks are sorted by name.
+Layers with networks, repeats, multiple children, empty containers, and those that would cause name conflicts are preserved; parameter values, source,
+and element names are preserved. Normalization is idempotent and does not promise to detect arbitrary graph isomorphism or aliased architectures.
 
-`normalized_fingerprint` 使用共享契约的 SHA-256 fingerprint。该指纹包含参数和
-provenance，因此它是保守的完整候选去重；参数或来源不同的树不会被错误地合并。
-环境保留用户编辑后的路径供下一步引用，搜索在评估前对规范形式去重。
+`normalized_fingerprint` uses the shared contract's SHA-256 fingerprint. This fingerprint includes parameters and
+provenance, so it is a conservative complete candidate deduplication; trees with different parameters or sources will not be incorrectly merged.
+The environment preserves user-edited paths for reference in the next step, and search deduplicates canonical forms before evaluation.
 
-## 三层策略
+## Three-layer strategy
 
-`arch_explorer.search.run_search` 的 SA、greedy、random 都调用
-`ExplorationEnv` 公开工具。默认外层只从组件目录和当前图生成基本编辑：split/merge、
-insert/remove、create/delete、跨容器移动，以及分类参数的原子 delete/create 替换。
-复制可以用于整棵子树；已注册但种子没有的组件也可进入候选。所有容器使用相同规则，
-名称、预设家族、阶段和配额不控制可达范围。高层变换仍可显式调用，但不进入默认集合。
+The SA, greedy, and random modes of `arch_explorer.search.run_search` all call the public utilities of
+`ExplorationEnv`. By default the outer layer only generates basic edits from the component catalog and the current graph: split/merge,
+insert/remove, create/delete, cross-container moves, and atomic delete/create replacements for categorical parameters.
+Duplication can be used for entire subtrees; components that are registered but not present in the seed can also enter candidates. All containers use the same rules,
+and names, preset families, stages, and quotas do not control the reachable range. High-level transformations can still be called explicitly, but do not enter the default set.
 
-新组件使用当前树中同名同单位的参数值或声明域中的代表值，标记为 synthetic 来源。
-不能从目录或现有参数确定的必需固定参数不会编造；此时由用户提供完整 spec。
-代表值只是有限的一步提议，不是对所有合法图的穷举，也不保证可执行。
-`search.proposals` 是用户明确限定的编辑/编辑组集合；`--basic-only` 过滤其中的高层变换。
+New components use parameter values with the same name and unit from the current tree or representative values from the declared domain, marked as synthetic source.
+Required fixed parameters that cannot be determined from the catalog or existing parameters are not fabricated; in this case the user provides a complete spec.
+Representative values are only a finite one-step proposal, not an exhaustive enumeration of all legal graphs, and do not guarantee executability.
+`search.proposals` is a user-explicitly-limited set of edits/edit groups; `--basic-only` filters out high-level transformations among them.
 
-树/组件校验失败不调用后端；实际后端尝试（含失败）计入评估预算。
-CGRA 与其他组件使用同一候选机制，也允许显式参数域和 set_parameters。
-CGRA 后端仍要求受支持的4×4标量uint32模型、16个PE、两个SRAM bank、容量和相关
-时钟/带宽关系；无效候选会返回真实后端原因，不代表新增物理支持。
-默认未知时钟是周期归一化单位，不能把调时钟的结果解读为测量精度。
-详见 [CGRA](cgra.md)。checkpoint/restore 不退还已消耗额度。
+Tree/component validation failures do not invoke the backend; actual backend attempts (including failures) count toward the evaluation budget.
+CGRA uses the same candidate mechanism as other components, and also allows explicit parameter domains and set_parameters.
+The CGRA backend still requires the supported 4×4 scalar uint32 model, 16 PEs, two SRAM banks, capacity, and related
+clock/bandwidth relationships; invalid candidates return the real backend reason, and do not represent newly added physical support.
+The default unknown clock is a cycle-normalized unit, and clock adjustment results cannot be interpreted as measurement precision.
+See [CGRA](cgra.md) for details. checkpoint/restore does not refund consumed quota.
 
-中层包含当前参数基线，并再采样至 `parameter_samples` 个参数版本。每个版本修改一个
-已声明 domain 的坐标：数值区间在当前值 ±`parameter_radius * abs(value)` 内均匀采样，
-int 最少允许一步；当前值为 0 时用 domain 宽度确定窗口。离散数值列表选当前值最近的
-候选及相邻项；字符串列表均匀采样；domain=None 保持固定。所有结果再次校验。
-每轮中层先以 `arch_explorer.cost.estimate` 估计当前基线 ADF。只要任一已知且启用的
-成本/面积约束超限，就以 `shrink_probability`（默认 0.75）概率优先选容量、lane 数、
-阵列行列、tensor/SIMT/PIM 运算单元规模，且只在当前值及更小值中采样。
-这些参数会影响当前成本公式；时钟和模拟带宽没有经过面积标定，不列入缩减优先项。
-整数边界和离散选项可能产生不变候选；偏置不是保证每次都降低成本。
-若所有启用指标均可用、无超限且至少一项尚有余额，以 `growth_probability` 概率优先选
-容量、算力或带宽参数并只向上采样。若某项超限，缩减优先于其他约束的余额；未知指标
-不产生方向判断。未触发偏置时仍做对称局部探索。每个参数版本都从同一基线出发，
-方向不随上一份随机样本改变；同配置、随机种子和工具序列可重放。
-`parameter_radius`、`growth_probability`、`shrink_probability` 和 `cost_model` 在合成配置中显式列出。
-已有的 domain=None 默认仍保持固定。调用者可在 `parameter_domains` 中逐路径明确列出
-正的有限数值选项及 source（必须包含种子值），例如 `{path:"chip/core/sram", param:"capacity",
-values:[524288,1048576,2097152], source:"synthetic private SRAM search space"}`；此时该坐标使用
-离散邻居采样。所有选项都先通过现有组件校验；显式选项可以缩小、不能扩大已有 domain。
-组件定义不变，未声明坐标仍遵守原规则。结构删除了对应路径后，该域不再参与采样。
-示例 `examples/adf-budget.json` 在真实 events 后端上演示非 GPU 私有 SRAM 容量参数与成本约束。
+The middle layer contains the current parameter baseline and resamples up to `parameter_samples` parameter versions. Each version modifies one
+coordinate of a declared domain: numeric intervals are sampled uniformly within the current value ±`parameter_radius * abs(value)`,
+with int allowing at least one step; when the current value is 0, the domain width determines the window. Discrete numeric lists select the candidate closest to the current value
+and adjacent items; string lists are sampled uniformly; domain=None remains fixed. All results are validated again.
+Each middle-layer round first estimates the current baseline ADF with `arch_explorer.cost.estimate`. As long as any known and enabled
+cost/area constraint is exceeded, with probability `shrink_probability` (default 0.75) it preferentially selects capacity, lane count,
+array rows/columns, tensor/SIMT/PIM compute unit scale, and samples only at the current value and smaller values.
+These parameters affect the current cost formula; clock and simulated bandwidth have not been area-calibrated and are not included in shrink priorities.
+Integer boundaries and discrete options may produce unchanged candidates; the bias is not a guarantee of reducing cost every time.
+If all enabled metrics are available, none exceed limits, and at least one item still has headroom, with probability `growth_probability` it preferentially selects
+capacity, compute, or bandwidth parameters and samples only upward. If some item exceeds its limit, shrink takes priority over headroom in other constraints; unknown metrics
+produce no directional judgment. When no bias is triggered, symmetric local exploration still occurs. Each parameter version starts from the same baseline,
+and the direction does not change with the previous random sample; the same configuration, random seed, and tool sequence are reproducible.
+`parameter_radius`, `growth_probability`, `shrink_probability`, and `cost_model` are explicitly listed in the synthesis configuration.
+Existing domain=None defaults remain fixed. Callers can explicitly list positive finite numeric options and source per path in `parameter_domains`
+(the seed value must be included), for example `{path:"chip/core/sram", param:"capacity",
+values:[524288,1048576,2097152], source:"synthetic private SRAM search space"}`; in this case that coordinate uses
+discrete neighbor sampling. All options first pass existing component validation; explicit options can narrow but not expand an existing domain.
+Component definitions remain unchanged, and undeclared coordinates still follow the original rules. After structure deletes the corresponding path, that domain no longer participates in sampling.
+The example `examples/adf-budget.json` demonstrates non-GPU private SRAM capacity parameters and cost constraints on a real events backend.
 
-内层枚举小的 `MappingTemplate.space()` 笛卡尔积；大空间采样扁平索引，避免物化整个积。
-每 workload 总共至多 `mapping_samples` 个 mapping 候选，多个适用模板共享这个额度。
-各 workload 独立选最低延迟 mapping；成本/面积由同一份 ADF 成本估计提供，不随 workload 改变。
+The inner layer enumerates the Cartesian product of small `MappingTemplate.space()`; large spaces sample flat indices, avoiding materializing the entire product.
+Each workload has at most `mapping_samples` mapping candidates in total, and multiple applicable templates share this quota.
+Each workload independently selects the lowest-latency mapping; cost/area is provided by the same ADF cost estimate and does not change with workload.
 
-目标为 `Σ weight*latency_ns + cost_penalty*max(0,cost-cost_budget)
-+ area_penalty*max(0,area-area_budget)`。`best` 和中层 winner 按这个目标排序；约束超出
-量、feasible 与占用比同时输出。罚系数过小可能选中超预算候选，调用方必须检查 feasible。
-启用的约束缺少指标时目标为 null，search 报 `unavailable_constraint`；未启用该约束时
-可仅以延迟搜索。未知指标始终保留 null。
-`cost_model.basis` 选择 raw（默认）或 full；口径、来源、未支持项见 [cost.md](cost.md)。
-后端 Evaluation 中的面积/成本保留为原始后端输出，搜索目标使用独立成本包的估计。
+The objective is `Σ weight*latency_ns + cost_penalty*max(0,cost-cost_budget)
++ area_penalty*max(0,area-area_budget)`. `best` and the middle-layer winner are sorted by this objective; constraint excess,
+feasible, and occupancy ratio are output simultaneously. If penalty coefficients are too small, over-budget candidates may be selected, and the caller must check feasible.
+When an enabled constraint lacks a metric, the objective is null, and search reports `unavailable_constraint`; when that constraint is not enabled,
+search can proceed by latency alone. Unknown metrics always remain null.
+`cost_model.basis` selects raw (default) or full; for basis, sources, and unsupported items see [cost.md](cost.md).
+Area/cost in the backend Evaluation are preserved as raw backend output, and the search objective uses estimates from the independent cost package.
 
-greedy 只接受目标不增的移动；random 接受所有已知目标的合法候选；SA 对目标下降直接
-接受，对上升量 Δ 仅在 `Δ <= max_relative_degradation*abs(current_score)` 时，以
-`exp(-Δ/temperature)` 概率接受。每次提议后温度乘 cooling。search 设置是算法参数，
-不进入仿真模型。max_steps 防止无效或重复提议无限循环，因此返回的实际评估量可能小于
-预算。比较策略时以 trace 中实际 backend 调用数为准。
+greedy only accepts moves where the objective does not increase; random accepts all legal candidates with known objectives; SA accepts objective decreases directly,
+and for an increase Δ only accepts with probability `exp(-Δ/temperature)` when `Δ <= max_relative_degradation*abs(current_score)`.
+After each proposal the temperature is multiplied by cooling. Search settings are algorithm parameters and do not enter the simulation model.
+max_steps prevents infinite loops from invalid or duplicate proposals, so the actual evaluation count returned may be less than
+the budget. When comparing strategies, use the actual backend call count in the trace as the standard.

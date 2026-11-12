@@ -1,23 +1,23 @@
-# SIM53 v1 的独立消费者接线
+# Independent Consumer Wiring for SIM53 v1
 
-`static_control_observations.classify(description, types, oracle, model)` 以原始 ModelProto、封存独立原值参考及正式 describe_onnx 的 values/nodes/outputs 划分物化值与静态控制。每个条目核原值 dtype/逻辑 shape；原节点和消费者的输入/输出身份也与 ModelProto 对齐。
+`static_control_observations.classify(description, types, oracle, model)` uses the original ModelProto, sealed independent original-value references, and the values/nodes/outputs partitions from the formal describe_onnx to materialize values and static control. Each entry verifies original-value dtype/logical shape; the input/output identities of original nodes and consumers are also aligned with the ModelProto.
 
-`tensor=null` 单列 static，记录 source attribute 摘要、消费者和已知 constant_folded 标记，`cpu_value_returned=false`、`folded_value_numerically_verified=false`。这个名单不进入 CPU 数值通过计数。`cast_observability` 只在两端均有 tensor 时做配对转换检查，其余静态 Cast 单列；物化目标仍可以作为原节点输出与独立参考比较。全部原始公开输出必须有物化 tensor 且顺序一致。
+`tensor=null` is listed separately as static, recording source attribute summaries, consumers, and known constant_folded markers, with `cpu_value_returned=false` and `folded_value_numerically_verified=false`. This list does not enter the CPU numerical pass count. `cast_observability` performs paired conversion checks only when both ends have tensors; other static Casts are listed separately; materialized targets can still be compared as original node outputs against independent references. All original public outputs must have materialized tensors in consistent order.
 
-`inspect_consumer_shapes` 从正式普通 Graph 核消费节点的输出 tensor shape 与可直接匹配的 shape 属性。它明确保留未核对属性，不能将源 attributes 的摘要、编译期折叠或 shape 一致性扩大成所有静态值/offset/axis 已数值核对。消费者保存两类名单和每类覆盖；真正产品状态仅由唯一候选运行填写。
+`inspect_consumer_shapes` verifies consumer node output tensor shapes and directly matchable shape attributes from the formal ordinary Graph. It explicitly preserves unverified attributes and must not expand source attribute summaries, compile-time folding, or shape consistency into numerical verification of all static values/offsets/axes. The consumer saves two lists and per-category coverage; true product status is filled only by the sole candidate run.
 
-`array_access_expectations.expected(op, tensors, values)` 根据冻结 ARRAY-API 在小输入上独立列出逐逻辑坐标读取与字节/抽象 issue 预期。Gather 索引各读一次，重复索引的数据读取保留重复；Where eager 读取两个分支；同一 tensor 在两个输入槽出现会累计两次；ArgMax 沿轴顺序读取，并区分逻辑标量索引和物理[1]。`compare_counts` 与 `compare_indices` 分别核正式返回的计费字段和读取坐标/顺序；物理地址须再经实际布局/访问展开独立核对，不能把逻辑坐标当物理字节地址。
+`array_access_expectations.expected(op, tensors, values)` independently lists per-logical-coordinate reads and byte/abstract issue expectations on small inputs according to the frozen ARRAY-API. Gather indices are each read once; data reads for duplicate indices retain duplicates; Where eagerly reads both branches; the same tensor appearing in two input slots accumulates twice; ArgMax reads in order along the axis and distinguishes logical scalar indices from physical [1]. `compare_counts` and `compare_indices` respectively verify the formally returned billing fields and read coordinates/order; physical addresses must be independently verified through actual layout/access expansion, and logical coordinates must not be treated as physical byte addresses.
 
-`block_expectations` 提供：
+`block_expectations` provides:
 
-- `partition_grid(shape, block_shape)`：末块裁切、starts 字典序、每片FP32字节。
-- `partition_coverage(shape, blocks)`：在不超过一百万元素的小输入上逐元素核覆盖、越界/重叠/漏片和字节，返回每片真实 canonical flat 地址。矩形切片不能被当作一个连续 flat 区间。
-- `payload_digest(value)`：独立 FP32 量化后 little-endian payload 摘要，保留正负零。
-- `load(source, starts=..., shape=..., guards=...)`：矩形源读取一次，完整读取每个栅栏，生成独立新输出，源/栅栏字节分列。
-- `zero(shape)` 与 `matmul_accumulate(A,B,C)`：完整写零或从 C 开始按 K 顺序 FP32 FFMA，累计源读取和新输出写入，禁止隐含原地更新。参考使用有理数舍入；手工有限 dyadic 小样本与声明的 FP64乘加后FP32舍入次序一致，未外推为所有浮点边界的设备等价。
+- `partition_grid(shape, block_shape)`: last block clipping, starts in lexicographic order, FP32 bytes per tile.
+- `partition_coverage(shape, blocks)`: on small inputs not exceeding one million elements, verify coverage element by element, out-of-bounds/overlap/missing tiles and bytes, returning the real canonical flat address of each tile. Rectangular slices must not be treated as one contiguous flat interval.
+- `payload_digest(value)`: independent FP32 quantized little-endian payload digest, preserving positive and negative zero.
+- `load(source, starts=..., shape=..., guards=...)`: rectangular source read once, each fence read completely, generating an independent new output, with source/fence bytes listed separately.
+- `zero(shape)` and `matmul_accumulate(A,B,C)`: complete zero write or FP32 FFMA starting from C in K order, accumulating source reads and new output writes, with implicit in-place updates forbidden. References use rational rounding; hand-crafted finite dyadic small samples are consistent with the declared FP64 multiply-add followed by FP32 rounding order, and are not extrapolated to device equivalence at all floating-point boundaries.
 
-小型 INPUTS 的 root 字节按槽顺序独立核为[564,272]，合计836B，cache-pass boundary 为1200B。该核对仅依据无答案根/分片边界和元数据；workspace 上界、聚合峰值、actual Events/容量和论文 MAC16×16 硬件均未借此认定。原四行尺度不构图、不编译、不执行，不占规模锁。
+The root bytes of the small INPUTS are independently verified in slot order as [564,272], totaling 836B, with the cache-pass boundary at 1200B. This verification is based only on answer-free root/tile boundaries and metadata; workspace upper bounds, aggregate peaks, actual Events/capacity, and the paper's MAC16×16 hardware are not established by this. The original four-row scale does not construct graphs, compile, or execute, and does not occupy the scale lock.
 
-通用数学 oracle 比当前生产准入域更广。例如已有 grouped Conv 与负步长 Slice 控制用于独立标准参考，SIM53 v1 生产明确只接 group=1、显式非负 pads 与正步长非空 Slice。六份实际模型按正式支持域消费；域外输入应记录正式拒绝，不能把数学 oracle 能计算当作产品已经支持。
+The general mathematical oracle is broader than the current production admission domain. For example, existing grouped Conv and negative-stride Slice controls are used for independent standard references; SIM53 v1 production explicitly only accepts group=1, explicit non-negative pads, and positive-stride non-empty Slice. Six actual models are consumed according to the formally supported domain; out-of-domain inputs should record formal rejection, and the fact that the mathematical oracle can compute must not be treated as product support.
 
-源码阶段只验证这组独立工具，并校验接口/输入闭包。完整 partition_input 返回 JSON、describe_onnx 静态/运行/Conv/Cast metadata 样本已向作者一次请求，用于后续精确适配；没有读取或安装作者生产源码来猜字段。实际分片恢复、Graph/编译/CPU/组件/CLI/fresh与有效重封全部继续等待负责人唯一候选。来源、数值、物理、组件和安装分列，既有原件不重标。
+The source-code stage only validates this set of independent tools and verifies interface/input closure. Complete partition_input returned JSON and describe_onnx static/runtime/Conv/Cast metadata samples have been requested once from the author for subsequent precise adaptation; the author's production source was not read or installed to guess fields. Actual tile recovery, Graph/compile/CPU/components/CLI/fresh and valid resealing all continue to await the sole candidate from the responsible owner. Source, numerical, physical, component, and installation are listed separately; existing originals are not relabeled.

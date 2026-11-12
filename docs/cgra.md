@@ -160,13 +160,7 @@ generic edits as every other ADF. The environment no longer restricts a run to a
 preset-shaped tree or one topology toggle. Explicit parameter choices may also be
 submitted; coupled clock/link/SRAM relationships must still be satisfied.
 
-The backend's physical requirements remain authoritative: scalar uint32,
-16 PEs, a 4×4 mesh, two supported SRAM banks, valid capacities and matching clock,
-link and port timings. Unexecutable edits fail clearly rather than acquiring
-unmodeled physical support. Capacity and reporting clock assumptions are recorded
-in provenance. The default unknown physical clock is cycle-normalized; do not
-interpret a higher assumed clock as measured speedup. Area/cost remain unknown.
-See [Agent commands](agent.md#cgra-具名种子与通用搜索) and [generic search](structure.md).
+The backend's physical requirements remain authoritative: scalar uint32, 16 PEs, a 4×4 mesh, two supported SRAM banks, valid capacities and matching clock, link and port timings. Unexecutable edits fail clearly rather than acquiring unmodeled physical support. Capacity and reporting clock assumptions are recorded in provenance. The default unknown physical clock is cycle-normalized; do not interpret a higher assumed clock as measured speedup. Area/cost remain unknown. See [Agent commands](agent.md#cgra-named-seeds-and-general-search) and [generic search](structure.md).
 
 For comparison with externally supplied digitized data:
 

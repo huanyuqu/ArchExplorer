@@ -1,9 +1,5 @@
-# 模型 demo 的验证边界
+# Validation Boundaries for Model Demos
 
-公开 GPU 路线是完整程序原生执行，入口见[ViT/CLIP 教程](tutorials/05-full-models.md)。
-模型需要完整输出与可核对的数值参考；两个 mapping 应语义等价、真实程序或几何不同。
-原生 cycles、完整执行计数、时钟、配置和来源应可追查，结果由同一公开入口重放。
+The public GPU route is complete program native execution; the entry is in the [ViT/CLIP tutorial](tutorials/05-full-models.md). Models require complete outputs and verifiable numerical references; the two mappings should be semantically equivalent, with real program or geometry differences. Native cycles, complete execution counts, clocks, configurations, and sources should be traceable, and results are replayed through the same public entry.
 
-旧 `gpu_kernel_service` 预测、服务参数 JSON、旧 GPU 校准工具和基线不再作为生产入口。
-历史测量及误差仍留在原报告位置；原生接入不能改写这些结论。
-小模型支持不能推导标准尺寸支持，合成 trace 不能推导硬件精度；缺口保留未知或 unsupported。
+Old `gpu_kernel_service` predictions, service parameter JSON, old GPU calibration tools, and baselines are no longer production entries. Historical measurements and errors remain in their original report locations; native integration cannot rewrite these conclusions. Small model support does not imply standard size support, and synthetic traces do not imply hardware accuracy; gaps remain unknown or unsupported.

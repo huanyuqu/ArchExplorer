@@ -1,65 +1,65 @@
-# Agent 架构探索环境
+# Agent architecture exploration environment
 
-ArchExplorer 为 Portal Resident、Claude Code 和搜索策略提供同一套有状态工具。
-模型由外部 Agent 宿主运行；本工具只提供 Python、JSON-lines 和 MCP 接口，以及离线
-scripted 演示策略。无需配置 LLM API、模型名称或密钥。
+ArchExplorer provides the same set of stateful tools for Portal Resident, Claude Code, and search strategies.
+Models are run by external Agent hosts; this tool only provides Python, JSON-lines, and MCP interfaces, as well as offline
+scripted demonstration strategies. No LLM API, model name, or key configuration is required.
 
-## 配置与启动
+## Configuration and startup
 
-`examples/adf-dmc.json` 是通用合成配置，可直接使用随包提供的
-组件、mapping 模板与注册的 `events` 执行器运行。环境启动时通过
-`arch_explorer.components.api.discover_components()` 加载内置目录和已安装扩展，供首次
-评估前的种子校验、工具描述和 mapping 选择使用。`adf.evaluate` 也使用注册能力。
-无需给示例配置额外注册模块。扩展作者见[独立组件包教程](component-extensions.md)。
+`examples/adf-dmc.json` is a general synthetic configuration that can run directly with the bundled
+components, mapping templates, and the registered `events` executor. At environment startup,
+`arch_explorer.components.api.discover_components()` loads the built-in catalog and installed extensions for
+seed validation, tool descriptions, and mapping selection before the first evaluation. `adf.evaluate` also uses registered capabilities.
+No additional module registration is needed for the example configuration. Extension authors should see the [standalone component package tutorial](component-extensions.md).
 
-`archexplorer components` 与 `describe_environment.component_catalog` 使用同一公共
-组件目录，按硬件类型列出实现ID/版本、来源、输入、参数和限制。原 `components` 字段保留
-结构搜索所需的参数域投影；不会在Agent内另建实现名单。ADF点的 `implementation`
-携带精确绑定及独立参数，完整 `seed_adf` 和 `create` spec 都保留该字段。
-普通 `set_parameters` 仍编辑共同硬件参数，不把实现参数混入共同命名空间。
-同一SM的roofline工作量和Accel-Sim原生程序有不同契约，不能只换名称后直接复用输入。
-见[实现选择与外包示例](component-implementations.md)。
+`archexplorer components` and `describe_environment.component_catalog` use the same public
+component catalog, listing implementation IDs/versions, provenance, inputs, parameters, and limitations by hardware type. The original `components` field retains
+the parameter domain projection needed for structure search; no separate implementation list is created inside the Agent. The `implementation`
+field at ADF points carries precise bindings and independent parameters; both the complete `seed_adf` and `create` specs retain this field.
+Ordinary `set_parameters` still edits common hardware parameters and does not mix implementation parameters into the common namespace.
+The roofline workload for the same SM and the Accel-Sim native program have different contracts; inputs cannot be directly reused after simply changing names.
+See [implementation selection and outsourcing examples](component-implementations.md).
 
-公共编译先用 `task_adapters` 读取注册目录，再使用 `compile_workload`、`prepare_compiled` 和 `evaluate_request` 工具：
-前两项不执行、不消耗评估预算，第三项对公共准备请求计一次尝试，失败同样计费；
-对已保存结果只读校验则不消耗预算。按组件路径传bindings，适配器专参置于其options；
-公共mapping传compute/memory/rules，具体options由注册规则验证。目录由公开task_adapters返回，不设Agent名单。
-描述符与describe_environment.task_adapters一致。operator_mappings工具及describe_environment同名字段读取公共规则目录。
-旧v1/v2编译分别通过显式migrate_compilation_v1/migrate_compilation_v2生成新v3，
-不迁移或重标旧执行结果；缺兼容项、歧义、错域与专参错误由公共契约拒绝。
-准备请求结果不会替换当前探索候选或进入best排名，原 `evaluate` / `submit` 保持原义。
-参数与默认matmul/外包调用见[公共编译教程](compilation.md)。
+Public compilation first uses `task_adapters` to read the registered catalog, then uses the `compile_workload`, `prepare_compiled`, and `evaluate_request` tools:
+the first two do not execute and do not consume evaluation budget; the third counts one attempt for a public prepared request, and failures are also charged;
+read-only validation of saved results does not consume budget. Pass bindings by component path; adapter-specific parameters go in their options;
+public mappings pass compute/memory/rules, with specific options validated by registered rules. The catalog is returned by the public task_adapters; no Agent list is set.
+Descriptors are consistent with describe_environment.task_adapters. The operator_mappings tool and the describe_environment field of the same name read the public rules catalog.
+Old v1/v2 compilations generate new v3 through explicit migrate_compilation_v1/migrate_compilation_v2 respectively;
+old execution results are not migrated or relabeled; missing compatibility items, ambiguity, wrong scope, and adapter-specific parameter errors are rejected by the public contract.
+Prepared request results do not replace current exploration candidates or enter best ranking; the original `evaluate` / `submit` retain their original meaning.
+For parameters and default matmul/outsourcing calls, see the [public compilation tutorial](compilation.md).
 
-配置 `compilation: {bindings?: object, implementations?: object}` 让既有 evaluate/search 对每个选中映射执行公共编译→准备→评估；
-不同时指定旧backend。backend_options仍属于prepare。该模式的映射检查/编译/准备失败计一次候选尝试，阶段与原因保留；
-无评估缓存。mapping_selectors可为请求对象或非空请求对象列表，后者逐项通过正式request_space。
-search.proposals可保留原结构编辑，也可使用 `{tool:"set_parameters",args:{parameters:[...]}}`。
-新编译探索结果由evaluate_request只读验证且不替换当前候选、不花新预算；原evaluate是明确的新评估。
-CLI rerun/Python exploration.rerun另行创建新执行。预算与格式详见[attention与探索](attention.md)。
+Configure `compilation: {bindings?: object, implementations?: object}` to make existing evaluate/search perform public compilation→preparation→evaluation for each selected mapping;
+do not specify the old backend at the same time. backend_options still belong to prepare. Mapping check/compilation/preparation failure in this mode counts as one candidate attempt, with stage and reason retained;
+no evaluation cache. mapping_selectors can be a request object or a non-empty list of request objects; the latter passes through the formal request_space item by item.
+search.proposals can retain original structure edits, or use `{tool:"set_parameters",args:{parameters:[...]}}`.
+New compilation exploration results are read-only validated by evaluate_request and do not replace current candidates or spend new budget; the original evaluate is an explicit new evaluation.
+CLI rerun/Python exploration.rerun separately creates new executions. For budget and format details, see [attention and exploration](attention.md).
 
-| 字段 | 语义；省略时的默认值 |
+| Field | Semantics; default when omitted |
 | --- | --- |
-| seed_adf | 完整 ADF JSON，或 `{"preset":"dmc|vectorcgra_4x4|vectorcgra_4x4_diag","parameters":{...}}`；必填。Python API 也接受 ADF 对象。 |
-| workloads | WorkloadSpec JSON 列表；kind、params、weight、name。weight 为有限正值；列表非空。 |
-| backend / backend_options | 已注册后端名，默认 events；options 直接交给后端。 |
-| registration_modules | 内置目录加载后额外导入的本地插件注册模块；默认空。仅用于扩展模型或显式测试替身，属于可信本地配置；提交和重放保留这些模块名。 |
-| max_evaluations | backend 调用总上限，默认 100。 |
-| cost_budget_usd / area_budget_mm2 | 正数或 null；null 不启用该约束。 |
-| cost_penalty / area_penalty | 非负罚系数，默认各 1.0。 |
-| parameter_samples / mapping_samples | 正整数，默认各 4。前者包括基线参数版本，后者是每 workload 的 mapping 上限。 |
-| parameter_radius / growth_probability | 默认 0.25 / 0.75；规则见 structure.md。 |
-| shrink_probability | 默认 0.75；已知成本或面积超预算时，优先缩减规模参数的概率。 |
-| parameter_domains | 默认 []；按 path/param 列出 values 和 source 的显式数值搜索域。校验现有组件约束，支持为原本固定的坐标授权离散搜索。 |
-| cost_model | 独立面积/成本模型配置：basis=raw 或 full、带来源的 process_nm / die_count、按 ADF 路径的 overrides；见 cost.md。 |
-| random_seed | 整数，默认 0。相同操作序列与后端保证确定性时可重放。 |
-| mapping_templates | 限定模板名列表；省略时使用所有已注册且适用的模板。 |
-| trace_path | JSONL 文件路径，必须尚不存在；省略时自动建立临时目录。服务将路径输出至 stderr。 |
-| search | max_steps、temperature、cooling、max_relative_degradation、可选 proposals。 |
-| agent | script、max_steps、max_tool_calls、log_path，仅用于离线脚本。 |
+| seed_adf | Complete ADF JSON, or `{"preset":"dmc|vectorcgra_4x4|vectorcgra_4x4_diag","parameters":{...}}`; required. Python API also accepts an ADF object. |
+| workloads | WorkloadSpec JSON list; kind, params, weight, name. weight is a finite positive value; the list is non-empty. |
+| backend / backend_options | Registered backend name, default events; options are passed directly to the backend. |
+| registration_modules | Additional local plugin registration modules imported after built-in catalog loading; default empty. Only for extension models or explicit test doubles; this is trusted local configuration; submission and replay retain these module names. |
+| max_evaluations | Total backend call limit, default 100. |
+| cost_budget_usd / area_budget_mm2 | Positive number or null; null disables the constraint. |
+| cost_penalty / area_penalty | Non-negative penalty coefficients, default 1.0 each. |
+| parameter_samples / mapping_samples | Positive integers, default 4 each. The former includes the baseline parameter version; the latter is the mapping limit per workload. |
+| parameter_radius / growth_probability | Default 0.25 / 0.75; rules in structure.md. |
+| shrink_probability | Default 0.75; probability of prioritizing scale parameter reduction when known cost or area exceeds budget. |
+| parameter_domains | Default []; explicit numeric search domains listing values and source by path/param. Validates existing component constraints and supports authorizing discrete search for originally fixed coordinates. |
+| cost_model | Independent area/cost model configuration: basis=raw or full, process_nm / die_count with provenance, overrides by ADF path; see cost.md. |
+| random_seed | Integer, default 0. Replayable when the same operation sequence and backend guarantee determinism. |
+| mapping_templates | List of restricted template names; when omitted, all registered and applicable templates are used. |
+| trace_path | JSONL file path, must not already exist; when omitted, a temporary directory is automatically created. The service outputs the path to stderr. |
+| search | max_steps, temperature, cooling, max_relative_degradation, optional proposals. |
+| agent | script, max_steps, max_tool_calls, log_path, only for offline scripts. |
 
-示例把全部算法参数写明，面积/成本预算为 null。需要约束时设置预算和罚系数，并先检查
-独立成本模型的口径与假设；不能把模型估计当作报价。
-配置统一由 ADF 环境校验；未知字段和缺少必需字段返回普通配置错误。
+The example writes out all algorithm parameters explicitly, with area/cost budgets as null. When constraints are needed, set budgets and penalty coefficients, and first check
+the scope and assumptions of the independent cost model; model estimates cannot be treated as quotations.
+Configuration is uniformly validated by the ADF environment; unknown fields and missing required fields return ordinary configuration errors.
 
 ```sh
 archexplorer search --config examples/adf-dmc.json --policy sa --output results/sa.json
@@ -68,14 +68,14 @@ archexplorer agent run --config examples/adf-dmc.json --policy scripted --output
 archexplorer evaluate results/scripted.json --output results/replayed.json
 ```
 
-## 工具与状态
+## Tools and state
 
-### CGRA 具名种子与通用搜索
+### CGRA named seeds and general search
 
-`examples/adf-cgra.json` 与 `examples/adf-cgra-diag.json` 分别从普通/对角 mesh
-起步，均使用能放入默认 SRAM 的合成 uint32 GEMM。种子参数直接传给 `devices.get`；
-默认每 bank 32 字，`{"preset":"vectorcgra_4x4","parameters":{"words_per_bank":128}}`
-是调用者显式选择的扩容场景，不能称为论文硬件参数。非法参数直接报错；容量不足不会自动扩容。
+`examples/adf-cgra.json` and `examples/adf-cgra-diag.json` start from ordinary/diagonal mesh respectively,
+both using synthetic uint32 GEMM that fits in the default SRAM. Seed parameters are passed directly to `devices.get`;
+the default is 32 words per bank; `{"preset":"vectorcgra_4x4","parameters":{"words_per_bank":128}}`
+is a caller-explicitly-selected expanded capacity scenario and cannot be called paper hardware parameters. Illegal parameters report errors directly; insufficient capacity does not auto-expand.
 
 ```sh
 archexplorer search --config examples/adf-cgra.json --policy sa --output results/cgra-sa.json
@@ -87,16 +87,16 @@ archexplorer env serve --config examples/adf-cgra.json
 archexplorer mcp --config examples/adf-cgra.json
 ```
 
-以上命令可把配置文件替换为 `examples/adf-cgra-diag.json`；所有 search/Agent 的结果
-都能交给独立进程 `evaluate` 重放。两份示例固定 random_seed=17、总预算12、每次
-mapping 候选4、最多6个结构步骤。默认结构提议与其他 ADF 共用组件目录和基本编辑，
-有限步数内可能因物理不支持或重复而留下未用预算。scripted 脚本显式评估两种拓扑、
-恢复和提交 best；这是一个声明的受限演示，不是默认可达集合。
+The above commands can replace the configuration file with `examples/adf-cgra-diag.json`; all search/Agent results
+can be replayed by an independent process `evaluate`. Both examples fix random_seed=17, total budget 12, 4
+mapping candidates per time, and at most 6 structure steps. Default structure proposals share the component catalog and basic edits with other ADFs;
+within limited steps, unused budget may remain due to physical unsupportedness or duplication. The scripted script explicitly evaluates two topologies,
+recovery, and submits best; this is a declared limited demonstration, not the default reachable set.
 
-`describe_environment.search_space` 报告 `component_graph`。任意合法 ADF 都可输入，
-包括不同名字或分组的树；组件校验和映射/后端的物理有效域仍决定候选是否可执行。
+`describe_environment.search_space` reports `component_graph`. Any legal ADF can be input,
+including trees with different names or groupings; component validation and the physical valid domains of mapping/backend still determine whether candidates are executable.
 
-外部 Agent 从真实工具返回值执行切换，例如在同一个 `env serve` 进程中：
+External Agents perform switching based on real tool return values, for example in the same `env serve` process:
 
 ```python
 import json, subprocess
@@ -123,56 +123,41 @@ p.stdin.close()
 assert p.wait() == 0
 ```
 
-CGRA 使用通用组件目录候选与显式参数编辑，`parameter_samples` 按共同规则执行。
-用户给出的参数选择必须满足组件域和后端物理关系；不支持的阵列、精度、容量或
-时钟/带宽组合会在评价时报告错误。`cgra_spatial` 的 ii、placement、routing、memory_port
-仍由现有 mapping 空间定义；ii 是标量最低发射间隔，不是编译器 modulo loop II。
+CGRA uses general component catalog candidates and explicit parameter editing; `parameter_samples` executes according to common rules.
+Parameter choices given by users must satisfy component domains and backend physical relationships; unsupported arrays, precisions, capacities, or
+clock/bandwidth combinations will report errors at evaluation time. `cgra_spatial`'s ii, placement, routing, memory_port
+are still defined by the existing mapping space; ii is the scalar minimum issue interval, not the compiler modulo loop II.
 
-示例不设置面积/美元预算；未知指标保留 null。启用这些预算时目标不可用。
-未知物理clock用于周期归一化，不能把 latency_ns 宣称为测量纳秒性能。
-原生 details.cycles、来源和警告在提交和重放中保留，见 [物理边界](cgra.md)。
+The examples do not set area/dollar budgets; unknown metrics remain null. When these budgets are enabled, the objective is unavailable.
+Unknown physical clock is used for cycle normalization; latency_ns cannot be declared as measured nanosecond performance.
+Native details.cycles, provenance, and warnings are retained in submission and replay; see [physical boundaries](cgra.md).
 
-### 通用工具
+### General tools
 
-机器可读定义唯一来源为 `arch_explorer.agent_env.schemas.TOOL_SCHEMAS`；全部传输使用它。
-Python 调用如 `env.evaluate(optimize="mapping")` 返回 `{"result": ...}` 或
-`{"error":{"code":...,"message":...,"details":...}}`。也可用 `env.call(name, args)`。
+The sole machine-readable definition source is `arch_explorer.agent_env.schemas.TOOL_SCHEMAS`; all transport uses it.
+Python calls such as `env.evaluate(optimize="mapping")` return `{"result": ...}` or
+`{"error":{"code":...,"message":...,"details":...}}`. You can also use `env.call(name, args)`.
 
-| 工具 | 使用方式 |
+| Tool | Usage |
 | --- | --- |
-| describe_environment | 读取目标、预算、组件角色/参数/单位/domain、编辑 schema、mapping 模板与全部工具 schema。 |
-| get_state | 当前 ADF JSON、缩进树、规范指纹、组件面积/成本估计、最近评估和剩余额度。 |
-| apply_edits | `{"edits":[...]}`；原子执行 1–3 个基本编辑或一个高层程序。返回展开的基本编辑。 |
-| set_parameters | `{"parameters":[{"path":"chip/core/sm","param":"clock_ghz","value":1.2,"source":"synthetic choice"}]}`；限定 domain。 |
-| evaluate | optimize 为 none、mapping 或 parameters_and_mapping。none 使用当前已选 mapping；首次自动取适用模板的一个合法候选。可显式提供每 workload 一个 mappings。 |
-| checkpoint / restore | `{"name":"baseline"}`；保存/恢复 ADF、mapping、最近评估和编辑记录。checkpoint 可省略 name。 |
-| undo | 撤销最近一次成功改变状态的操作，包括 evaluate 选出的参数/mapping。 |
-| history | offset/limit 分页读取调用摘要与后端尝试；默认 0/100。 |
-| best | 返回目标最小的完整评估候选及已用额度。 |
-| submit | selection 为 best（默认）或 current；可选 path 写出可独立重放的 JSON 文件。 |
+| describe_environment | Read objectives, budgets, component roles/parameters/units/domain, edit schema, mapping templates, and all tool schemas. |
+| get_state | Current ADF JSON, indented tree, specification fingerprint, component area/cost estimates, recent evaluations, and remaining quota. |
+| apply_edits | `{"edits":[...]}`; atomically execute 1–3 basic edits or one high-level program. Returns the expanded basic edits. |
+| set_parameters | `{"parameters":[{"path":"chip/core/sm","param":"clock_ghz","value":1.2,"source":"synthetic choice"}]}`; constrained to the domain. |
+| evaluate | optimize is none, mapping, or parameters_and_mapping. none uses the currently selected mapping; the first time it automatically picks a legal candidate from an applicable template. One mappings per workload can be provided explicitly. |
+| checkpoint / restore | `{"name":"baseline"}`; save/restore ADF, mapping, recent evaluations, and edit history. checkpoint may omit name. |
+| undo | Undo the most recent operation that successfully changed state, including parameters/mapping selected by evaluate. |
+| history | Paginated read of call summaries and backend attempts with offset/limit; default 0/100. |
+| best | Returns the complete evaluated candidate with the smallest objective and the quota used. |
+| submit | selection is best (default) or current; optional path writes a JSON file that can be replayed independently. |
 
-一次评估单位是“对一个 workload 的一个具体 mapping 尝试调用后端”。中/内层每个尝试
-分别计数，失败也计数。开始参数版本前至少保留一个完整 workload suite 的额度；最后
-不足一套的余额保留。结构编辑、参数设置、查看和恢复均不消耗额度。restore/undo 不退还
-额度、不回滚历史、不重置随机数状态；best 跨恢复保留。
+One evaluation unit is "one backend invocation attempt for one concrete mapping of one workload". Each attempt in the middle/inner layers counts separately, and failures also count. Before starting a parameter version, keep at least enough quota for one complete workload suite; the remaining balance that is less than one suite is retained. Structural edits, parameter settings, viewing, and restore do not consume quota. restore/undo do not refund quota, do not roll back history, and do not reset random number state; best is preserved across restores.
 
-每个 workload 输出原始 Evaluation、按累计任务时间排序的算子、利用率最高的资源、
-provenance 来源摘要。任务时间可能重叠，累计值不能当作端到端延迟。组件面积/成本构成
-由 `arch_explorer.cost.estimate` 提供；目标使用它的 `area_mm2/cost_usd`，与后端延迟合成。
-`get_state.costs` 与评估候选的 `cost_estimate` 包含类别/路径分解、来源、假设、略去和不支持项。
-未知组件导致总面积/成本为 null；若影响启用的约束，目标也为 null，不能称为满足预算。
-DRAM 硅面积独立列出，缺少它不等于逻辑 die 面积或采购价格未知。后端原有 Evaluation
-数值保留为原始输出，可能仍为 null；不覆盖独立模型。详见 [成本模型口径](cost.md)。
+For each workload, output the raw Evaluation, operators sorted by cumulative task time, the resource with the highest utilization, and a provenance source summary. Task times may overlap, so cumulative values cannot be treated as end-to-end latency. Component area/cost breakdown is provided by `arch_explorer.cost.estimate`; the objective uses its `area_mm2/cost_usd`, combined with backend latency. `get_state.costs` and the evaluated candidate's `cost_estimate` include category/path breakdown, sources, assumptions, omitted, and unsupported items. Unknown components cause total area/cost to be null; if this affects enabled constraints, the objective is also null and cannot be claimed to satisfy the budget. DRAM silicon area is listed separately; its absence does not mean the logic die area or purchase price is unknown. The backend's original Evaluation values are preserved as raw output and may still be null; the independent model is not overwritten. See [cost model scope](cost.md) for details.
 
-结构编辑通过 ADF 语法与组件参数校验后，仍可能不满足后端构造或 mapping 的要求。
-规则以[builder 与模板的 ADF 约束](components.md#adf-requirements-of-the-builder-and-the-templates)
-为准。`evaluate` 失败时查看 `error.details.trials`：`cause` 保留结构化原因；若已尝试
-后端，`cause.details.attempts` 包含计数索引、具体 mapping 与原始错误。例如 mesh 容量
-不足时包含网络路径、端点数和 mesh 尺寸。模板全部不适用时返回 `no_mapping`，此时尚未
-消耗后端额度；根据 `get_state` 中的当前树和上述约束修正结构，或恢复 checkpoint。
-`history` 保留完整尝试记录，失败的后端调用仍消耗额度；失败不会成为最佳候选。
+After structural edits pass ADF syntax and component parameter validation, they may still fail to meet backend construction or mapping requirements. The rules are based on [ADF requirements of the builder and the templates](components.md#adf-requirements-of-the-builder-and-the-templates). When `evaluate` fails, check `error.details.trials`: `cause` preserves the structured reason; if the backend was attempted, `cause.details.attempts` contains the count index, the specific mapping, and the original error. For example, when mesh capacity is insufficient, it includes the network path, endpoint count, and mesh size. When no template is applicable, it returns `no_mapping`, and no backend quota has been consumed at that point; correct the structure based on the current tree in `get_state` and the above constraints, or restore a checkpoint. `history` keeps the complete attempt record; failed backend calls still consume quota; failures do not become the best candidate.
 
-所有工具调用和返回写入 JSONL；首行为配置。相同模型版本和注册模块下可以重放：
+All tool calls and returns are written to JSONL; the first line is the configuration. Replay is possible under the same model version and registered modules:
 
 ```python
 import json
@@ -186,16 +171,11 @@ restored = replay_trace(json.loads(line) for line in env.trace_path.read_text().
 assert restored.used == env.used
 ```
 
-trace 重放逐调用核对结果与计数，忽略 submit 的外部文件写入。checkpoint 只在当前服务
-进程中存在；服务重启可用 trace 重放恢复。不同后端版本或随机后端可能产生 trace_mismatch。
+Trace replay verifies results and counts call by call, ignoring submit's external file writes. checkpoints exist only within the current service process; after a service restart, trace replay can be used to recover. Different backend versions or random backends may produce trace_mismatch.
 
-## Claude Code：MCP stdio
+## Claude Code: MCP stdio
 
-安装可选依赖：在仓库根目录执行 `python -m pip install '.[mcp]'`。MCP 传输使用 SDK 1.x 的
-low-level server；本版本验证过 1.30.0。未安装时命令给出明确安装说明。
-项目 `.mcp.json` 的 mcpServers / command / args 格式见
-[Claude Code 官方 MCP 文档](https://code.claude.com/docs/en/mcp)。使用绝对路径，以免受
-Claude Code 启动目录影响：
+Install optional dependencies: run `python -m pip install '.[mcp]'` in the repository root. The MCP transport uses the SDK 1.x low-level server; this version has been verified with 1.30.0. When not installed, the command gives clear installation instructions. The mcpServers / command / args format in the project `.mcp.json` is described in the [Claude Code official MCP documentation](https://code.claude.com/docs/en/mcp). Use absolute paths to avoid being affected by the Claude Code startup directory:
 
 ```json
 {
@@ -209,19 +189,13 @@ Claude Code 启动目录影响：
 }
 ```
 
-客户端接入后读取工具列表，再调用 describe_environment。stdout 只承载 MCP 协议，
-日志走 stderr。同一个服务器进程是一条探索会话；不同 Agent 的公平比较需各启一个
-新进程并采用同样配置。
+After the client connects, read the tool list, then call describe_environment. stdout carries only the MCP protocol; logs go to stderr. The same server process is one exploration session; fair comparison between different Agents requires starting a new process for each with the same configuration.
 
-MCP 的 JSON-RPC 帧由 SDK 校验。本版本验证的 SDK 1.30.0 会丢弃非有限 id 帧并继续
-处理下一条合法请求；它不会为这种帧生成 JSON-lines 的 `invalid_request` 回复。
-工具参数中的非有限数值返回 `invalid_arguments`，会话仍可继续使用。
+MCP JSON-RPC frames are validated by the SDK. SDK 1.30.0, verified in this version, discards frames with non-finite ids and continues processing the next valid request; it does not generate a JSON-lines `invalid_request` reply for such frames. Non-finite numeric values in tool parameters return `invalid_arguments`, and the session can continue to be used.
 
-## Portal Resident：JSON-lines stdio
+## Portal Resident: JSON-lines stdio
 
-Resident 可用自身已获授权的执行工具启动本地命令，持有 stdin/stdout 管道直到探索结束。
-同一进程按顺序发送一行 JSON、读取一行回复；不要每次调用重新启动服务。
-这条本地协议不需要 Portal 账号或密钥，也不会改变 Resident 的身份。
+Resident can use its own authorized execution tools to start a local command, holding stdin/stdout pipes until the exploration ends. The same process sends one line of JSON and reads one line of reply in sequence; do not restart the service for each call. This local protocol does not require a Portal account or key, and does not change the Resident's identity.
 
 ```python
 import json
@@ -253,71 +227,40 @@ finally:
     process.wait(timeout=30)
 ```
 
-每行必须包含 `id` 和字符串 `tool`，可选 `args`。id 接受字符串、整数或 null；不接受
-布尔值、小数、对象或数组。解析拒绝 NaN、Infinity、-Infinity 及浮点溢出（如 1e309），
-返回 `invalid_request` 后继续下一行；解析失败或 id 不合法时响应 id 为 null。
-合法帧的 id 原样回传。响应无法编码成有限 JSON 时返回 `invalid_response` 并继续；此时
-工具可能已经执行，应先查看 history，避免直接重试有状态操作。
+Each line must contain `id` and a string `tool`, with optional `args`. id accepts strings, integers, or null; booleans, decimals, objects, or arrays are not accepted. Parsing rejects NaN, Infinity, -Infinity, and floating-point overflow (such as 1e309), returns `invalid_request`, and continues to the next line; when parsing fails or the id is invalid, the response id is null. For valid frames, the id is echoed back unchanged. When a response cannot be encoded into finite JSON, it returns `invalid_response` and continues; in this case the tool may have already executed, so check history first and avoid directly retrying stateful operations.
 
-未知工具、错误参数及非法编辑返回 error，服务继续接受下一行。`evaluate` 和 `submit`
-的结果文件可由独立进程重放，使用同样的组件/backend 注册入口。
+Unknown tools, incorrect parameters, and invalid edits return error, and the service continues to accept the next line. The result files of `evaluate` and `submit` can be replayed by an independent process using the same component/backend registration entry points.
 
-## 离线脚本与公平比较
+## Offline scripts and fair comparison
 
-`agent run --policy scripted` 不做网络请求。`agent.script` 是 `{tool,args}` 列表，逐条
-执行；示例配置演示查看、checkpoint、基线评估、结构编辑、评估、restore、best、submit。
-没有 script 时持续调用 parameters_and_mapping 直到评估预算或步数上限。
-max_steps 默认 30，max_tool_calls 默认等于 max_steps；结束时导出已经找到的最佳候选。
-最终导出不消耗评估额，单独列于 trace。脚本步数包含失败调用。
+`agent run --policy scripted` makes no network requests. `agent.script` is a list of `{tool,args}` executed one by one; the example configuration demonstrates viewing, checkpoint, baseline evaluation, structural edits, evaluation, restore, best, submit. Without a script, it repeatedly calls parameters_and_mapping until the evaluation budget or step limit is reached. max_steps defaults to 30, max_tool_calls defaults to max_steps; at the end it exports the best candidate found. The final export does not consume evaluation quota and is listed separately in the trace. Script steps include failed calls.
 
-SA/greedy/random 与 Agent 比较时保持种子 ADF、workload/权重、后端及模型版本、预算与
-罚系数、中/内层样本数、随机种子一致。用实际 backend 调用数绘制最佳目标轨迹，报告
-invalid/duplicate 提议与提前停止；不能用工具调用次数替代评估次数。若要比较结构策略，
-为 scripted 明确提供结构编辑序列；无 script 的默认策略只做固定结构的参数/mapping 调优。
+When comparing SA/greedy/random with Agent, keep the seed ADF, workload/weights, backend and model versions, budget and penalty coefficients, middle/inner layer sample counts, and random seed consistent. Use the actual number of backend calls to plot the best objective trajectory, and report invalid/duplicate proposals and early stopping; do not substitute tool call counts for evaluation counts. To compare structural strategies, explicitly provide a structural edit sequence for scripted; the default strategy without a script only performs parameter/mapping tuning on a fixed structure.
 
-## 给 Agent 的探索任务模板
+## Exploration task template for Agents
 
 ```text
-在当前 ArchExplorer 环境中寻找低延迟架构。先调用 describe_environment 和 get_state，
-确认 workload、权重、评估余额、成本/面积预算与罚系数。不得修改这些实验条件。
-检查 get_state.costs 的 basis、assumptions、omitted、unsupported；不得把参考模型当成完整物理设计或实际采购报价。
+Find a low-latency architecture in the current ArchExplorer environment. First call describe_environment and get_state to confirm workloads, weights, evaluation balance, cost/area budgets, and penalty coefficients. Do not modify these experimental conditions. Check the basis, assumptions, omitted, and unsupported fields of get_state.costs; do not treat the reference model as a complete physical design or an actual purchase quote.
 
-先保存 seed checkpoint，再以 parameters_and_mapping 评估基线。根据组件目录和瓶颈摘要，
-提出 1–3 个基本编辑或一个高层变换；记录每次改动希望改善的瓶颈。编辑成功不代表后端
-一定能构造或执行；评估失败时读取 error.details.trials 的 cause 和后端 attempts，结合
-get_state 与 docs/components.md 的 “ADF requirements of the builder and the templates”
-一节修正或恢复。不要把未评估结果当作性能证据。结构改变后使用相同中/内层设置评估，必要时 restore；
-注意 restore 不退还额度。计数依据后端评估次数。
+First save a seed checkpoint, then evaluate the baseline with parameters_and_mapping. Based on the component catalog and bottleneck summary, propose 1–3 basic edits or one high-level transformation; record the bottleneck each change is intended to improve. A successful edit does not guarantee the backend can construct or execute it; when evaluation fails, read the cause and backend attempts in error.details.trials, and correct or restore based on get_state and the "ADF requirements of the builder and the templates" section in docs/components.md. Do not treat unevaluated results as performance evidence. After structural changes, evaluate with the same middle/inner layer settings, and restore if necessary; note that restore does not refund quota. Count based on backend evaluation calls.
 
-预算不足时停止评估。调用 best，检查 feasible、unavailable_constraints、每个 workload
-延迟与 provenance。缺失指标须在结论中明确写出。以 submit(selection="best", path=指定路径)
-交付结果，并用 archexplorer evaluate 独立重放。最终报告基线与最佳目标、实际评估次数、
-主要结构/参数/mapping 变化、预算可用性和模型限制，附结果与 JSONL trace 路径。
-不要发起额外模型 API 请求；直接使用当前宿主提供的探索工具。
+Stop evaluating when the budget is insufficient. Call best and check feasible, unavailable_constraints, per-workload latency, and provenance. Missing metrics must be explicitly stated in the conclusion. Deliver results with submit(selection="best", path=specified path), and replay independently with archexplorer evaluate. The final report should include baseline and best objectives, actual evaluation count, major structural/parameter/mapping changes, budget availability, and model limitations, with paths to results and the JSONL trace. Do not make additional model API requests; use the exploration tools provided by the current host directly.
 ```
 
-## 条件 mapping 空间：聚合与显式指令
+## Conditional mapping space: aggregation and explicit instructions
 
-`describe_environment().result.mapping_spaces` 是按 workload 顺序排列的模板契约。
-普通模板的 `contract.kind=flat` 仍为参数名到选项列表；条件模板的
-`contract.kind=conditional` 列出互斥的 `branches`、直接 API 的 `direct_defaults`、
-默认采样选择 `sampling_defaults` 和被硬件/负载排除的 `unavailable` 原因。
-`sampling_spaces` 给出当前配置筛选后的活动参数乘积，可逐键选择其中一个值生成完整 mapping。
-该发现步骤只做输入校验，不运行指令或事务时序；结构/负载变化后需重新发现。
+`describe_environment().result.mapping_spaces` is the template contract ordered by workload. Ordinary templates with `contract.kind=flat` remain a mapping from parameter names to option lists; conditional templates with `contract.kind=conditional` list mutually exclusive `branches`, `direct_defaults` for the direct API, `sampling_defaults` for default sampling selection, and `unavailable` reasons excluded by hardware/load. `sampling_spaces` gives the active parameter product after filtering under the current configuration, and one value can be selected per key to generate a complete mapping. This discovery step only performs input validation and does not run instructions or transaction timing; rediscovery is required after structural/load changes.
 
-`pim_offload.space(adf, workload)` 返回 `ConditionalMappingSpace`，不再把互斥参数压成一个字典。
-Python 调用者可使用 `arch_explorer.adf.registry.mapping_spaces(space, selectors)` 取得活动乘积；
-不要再用 `space.items()` 或把各分支的键取并集。普通模板的 `.space()` 返回值不变。
+`pim_offload.space(adf, workload)` returns a `ConditionalMappingSpace` and no longer flattens mutually exclusive parameters into a single dictionary. Python callers can use `arch_explorer.adf.registry.mapping_spaces(space, selectors)` to obtain the active product; do not use `space.items()` or take the union of keys across branches. The `.space()` return value of ordinary templates is unchanged.
 
-| 分支 | 活动参数 |
+| Branch | Active parameters |
 | --- | --- |
-| aggregate / aggregate | attention、sub_batches、tp、inner、两个 execution 字段，以及**所选** inner 模板的 `inner.*` |
-| instructions / aggregate | attention=pim、sub_batches=1、合法 tp、inner=gsm_tiled、两个 execution 字段；无 `inner.*` |
-| instructions / transactions | 同上；另需满足源事务硬件和 workload 条件 |
-| aggregate / transactions | 不支持，不出现在合法分支中 |
+| aggregate / aggregate | attention, sub_batches, tp, inner, two execution fields, and the `inner.*` of the **selected** inner template |
+| instructions / aggregate | attention=pim, sub_batches=1, legal tp, inner=gsm_tiled, two execution fields; no `inner.*` |
+| instructions / transactions | Same as above; additionally must satisfy source transaction hardware and workload conditions |
+| aggregate / transactions | Not supported and does not appear in legal branches |
 
-默认采样只包含 aggregate/aggregate。显式指令执行成本较高，应在小场景中主动选择，
-例如配置中加入以下字段（ADF 为符合条件的 NeuPIMs，workload 为受支持的 FP16 decode）：
+Default sampling only includes aggregate/aggregate. Explicit instruction execution has higher cost and should be actively selected in small scenarios, for example by adding the following fields to the configuration (ADF is a qualifying NeuPIMs, workload is a supported FP16 decode):
 
 ```json
 {
@@ -332,21 +275,8 @@ Python 调用者可使用 `arch_explorer.adf.registry.mapping_spaces(space, sele
 }
 ```
 
-这是附加配置片段，仍需 `seed_adf` 和 `workloads`。把 memory_execution 改为 aggregate 即选
-指令/带宽消融路径。`mapping_selectors` 按模板固定选项；未给出的 execution 字段仍使用
-sampling_defaults，不能只写 transactions 让系统暗中开启 instructions。
-普通 flat 模板也可用 selectors 固定选项；无匹配分支、未知键或未活动键都报错。
-采样按互斥乘积的总大小抽有限索引，不物化大笛卡尔积；count、seed 和失败预算口径不变。
+This is an additional configuration fragment; `seed_adf` and `workloads` are still required. Changing memory_execution to aggregate selects the instruction/bandwidth ablation path. `mapping_selectors` fixes options per template; execution fields not provided still use sampling_defaults, and you cannot write only transactions to let the system implicitly enable instructions. Ordinary flat templates can also use selectors to fix options; no matching branch, unknown keys, or inactive keys all raise errors. Sampling draws a finite index based on the total size of the mutually exclusive product and does not materialize large Cartesian products; count, seed, and failure budget semantics are unchanged.
 
-完整环境/search mapping 必须包含所选分支的全部活动键，包括 execution 字段。
-`submit` 原样保存完整 mapping，CLI `evaluate` 按同一条件契约验证后重放；不丢弃非活动键。
-直接 `adf.evaluate` 保留简写兼容：`MappingSpec('pim_offload', {})` 是原聚合默认，
-`{'npu_execution':'instructions'}` 默认 memory=aggregate、attention=pim、sub_batches=1、tp=1、
-inner=gsm_tiled。聚合 inner 参数省略时沿用对应 inner 模板默认。简写不是完整 Agent mapping；
-向环境传显式 mappings 时应从发现的活动空间补齐所有键。
+A complete environment/search mapping must include all active keys of the selected branch, including execution fields. `submit` saves the complete mapping as-is, and CLI `evaluate` validates and replays it under the same conditional contract; inactive keys are not discarded. Direct `adf.evaluate` preserves shorthand compatibility: `MappingSpec('pim_offload', {})` is the original aggregate default, and `{'npu_execution':'instructions'}` defaults to memory=aggregate, attention=pim, sub_batches=1, tp=1, inner=gsm_tiled. When aggregate inner parameters are omitted, the corresponding inner template defaults are used. Shorthand is not a complete Agent mapping; when passing explicit mappings to the environment, all keys should be completed from the discovered active space.
 
-旧结果若把 gsm_tiled 与 dmc_partition 的 inner 参数并在一起，或把 inner.* 带进显式指令，
-现在明确拒绝：这些原先被忽略/互相冲突的配置不能通过偷偷删键冒充等价重放。
-应保留原文件并从合法分支重新评价生成新结果。硬件容量/时钟、FP16/iteration、head/GQA、
-返回 buffer 与 KV 地址范围等条件不满足时，unavailable 会记录原因；不是自动扩容或切换物理模型。
-模板发现无法预知所有运行时容量/调度失败；这些仍按实际 backend 尝试记录并消耗预算。
+Old results that merged the inner parameters of gsm_tiled and dmc_partition, or carried inner.* into explicit instructions, are now explicitly rejected: these configurations that were previously ignored/mutually conflicting cannot masquerade as equivalent replays by silently deleting keys. Keep the original files and re-evaluate from legal branches to generate new results. When hardware capacity/clock, FP16/iteration, head/GQA, return buffer, and KV address range conditions are not met, unavailable records the reason; it is not automatic expansion or switching physical models. Template discovery cannot predict all runtime capacity/scheduling failures; these are still recorded as actual backend attempts and consume budget.

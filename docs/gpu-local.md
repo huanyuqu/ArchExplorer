@@ -1,7 +1,5 @@
-# GPU 组件与本地资源
+# GPU Components and Local Resources
 
-GPU 的 SM、L1/shared、L2、互连和 DRAM 参数由原生 Accel-Sim 配置编译器消费。
-接口与字段来源见[原生引擎文档](accelsim.md)，完整程序用法见[ViT/CLIP demo](tutorials/05-full-models.md)。
+GPU SM, L1/shared, L2, interconnect, and DRAM parameters are consumed by the native Accel-Sim configuration compiler. For interfaces and field sources, see [native engine documentation](accelsim.md); for complete program usage, see [ViT/CLIP demo](tutorials/05-full-models.md).
 
-自建 GPU 本地带宽/吞吐时延路径已移除。旧 `gpu_sm` 配置不迁移成 vector 单元继续执行，
-也没有旧 GPU 预测 fallback。非 GPU vector、systolic、PIM 的通用 service 语义仍服务各自后端。
+The self-built GPU local bandwidth/throughput latency path has been removed. Old `gpu_sm` configurations are not migrated to vector units for continued execution, and there is no old GPU prediction fallback. Non-GPU vector, systolic, and PIM common service semantics still serve their respective backends.

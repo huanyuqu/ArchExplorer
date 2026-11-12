@@ -1,16 +1,14 @@
-# ArchExplorer 负载驱动教程
+# ArchExplorer Workload-Driven Tutorials
 
-原生 GPU demo 从完整小模型走到真实程序执行；通用搜索教程使用合成非 GPU vector many-core。
-两者都不下载权重或调用付费 API。原生模拟还需要显式安装外部引擎。
+The native GPU demo goes from a complete small model to real program execution; the general search tutorial uses a synthetic non-GPU vector many-core. Neither downloads weights or calls paid APIs. Native simulation also requires explicitly installing an external engine.
 
-1. [安装、首次搜索与独立重放](01-quickstart.md)：非 GPU 合成算子闭环。
-2. [描述自己的负载](02-workloads.md)：形状、依赖及覆盖范围。
-3. [建立非 GPU 架构](03-architecture.md)：DMC 组件、参数和评价。
-4. [受限探索与 Agent](04-exploration.md)：预算、约束和可行结果。
-5. [ViT/CLIP 原生 GPU demo](05-full-models.md)：完整小前向、ADF、mapping、原生结果与新形状。
-6. [标准模型语义来源](06-full-model-sources.md)：不等于标准模型原生支持。
-7. [基线工具的适用范围](07-model-baselines.md)：非 GPU 搜索和历史结果边界。
-8. [接入自己的组件或引擎](../component-extensions.md)：独立包、注册、mapping、生成与重放。
+1. [Installation, first search, and independent replay](01-quickstart.md): closed loop for non-GPU synthetic operators.
+2. [Describing your own workload](02-workloads.md): shapes, dependencies, and coverage scope.
+3. [Building a non-GPU architecture](03-architecture.md): DMC components, parameters, and evaluation.
+4. [Constrained exploration and Agent](04-exploration.md): budgets, constraints, and feasible results.
+5. [ViT/CLIP native GPU demo](05-full-models.md): complete small forward pass, ADF, mapping, native results, and new shapes.
+6. [Standard model semantic sources](06-full-model-sources.md): not equivalent to native support for standard models.
+7. [Scope of baseline tools](07-model-baselines.md): non-GPU search and historical result boundaries.
+8. [Integrating your own components or engines](../component-extensions.md): independent packages, registration, mapping, generation, and replay.
 
-`examples/tutorials/` 的视觉/具身例子只是单个合成投影，不是完整模型或机器人闭环。
-默认原生 demo 的 tiny 配置由核心场景明确声明，不冒充标准 ViT/CLIP。
+The vision/embodied examples in `examples/tutorials/` are only single synthetic projections, not complete models or robot closed loops. The tiny configuration of the default native demo is explicitly declared by the core scenario and does not impersonate standard ViT/CLIP.

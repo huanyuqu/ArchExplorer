@@ -1,12 +1,12 @@
-# 实际 PyTorch 模块导出与普通 ONNX 用户流程
+# Real PyTorch Module Export and Ordinary ONNX User Flow
 
-框架导出是可选入口。已验证版本为 CPU PyTorch 2.5.1+cpu、ONNX1.16.2，使用 legacy exporter（dynamo=False）、opset17、推理模式、参数导出和常量折叠。实际生成 IR8；其他 IR 明确拒绝，不改 protobuf 版本数。没有 PyTorch/ONNX 时，核心库、CLI 与比较器仍可导入。建议独立环境按 [官方 CPU 安装表](https://pytorch.org/get-started/previous-versions/)安装精确版本，不下载预训练权重。
+Framework export is an optional entry point. Validated versions are CPU PyTorch 2.5.1+cpu and ONNX 1.16.2, using the legacy exporter (dynamo=False), opset 17, inference mode, parameter export, and constant folding. It actually generates IR8; other IRs are explicitly rejected without changing the protobuf version number. Without PyTorch/ONNX, the core library, CLI, and comparator can still be imported. It is recommended to install exact versions in a separate environment according to the [official CPU installation table](https://pytorch.org/get-started/previous-versions/) and not to download pretrained weights.
 
-Python 入口 `arch_explorer.archs.framework_export.export_torch(module, *, inputs, output_dir, output_names, input_names=None, dynamic_axes=None, external_data=False)` 接受实际 CPU `torch.nn.Module` 或用户的 TorchScript 文件。对象先复制再 eval，原权重和 training 标志保持。只读取用户明确提供的所有根；不按模型名字替换图。
+The Python entry point `arch_explorer.archs.framework_export.export_torch(module, *, inputs, output_dir, output_names, input_names=None, dynamic_axes=None, external_data=False)` accepts an actual CPU `torch.nn.Module` or a user's TorchScript file. The object is copied first and then evaluated; original weights and training flags are preserved. Only all roots explicitly provided by the user are read; graphs are not replaced based on model names.
 
-`inputs` 每个名字的值恰为 `{dtype, shape, values}`。dtype 为 fp32/fp16/bf16/int32/int64/bool，shape 是完整正整数列表，标量为 []；values 是完整有限值。输入在导出前实际转换到声明的存储精度，低精度根不是 FP32 元数据标签。整数根在 tensor 分配前拒绝小数、bool 和越界，布尔根要求 JSON bool；合法 int64 直接从整数构造并以整数保存，包含大于2^53的值。
+The value for each name in `inputs` is exactly `{dtype, shape, values}`. dtype is fp32/fp16/bf16/int32/int64/bool, shape is a complete list of positive integers with [] for scalars; values are complete finite values. Inputs are actually converted to the declared storage precision before export; low-precision roots are not FP32 metadata labels. Integer roots reject decimals, bools, and out-of-range values before tensor allocation; boolean roots require JSON bool; valid int64 is constructed directly from integers and saved as integers, including values greater than 2^53.
 
-`input_names` 是模块位置参数顺序，且必须恰覆盖全部根。Python 调用者可省略并采用自己的字典插入顺序；序列化 JSON 流程应显式传该列表。CLI 必须用 `--input-names`，不依赖 JSON 对象键顺序。`output_names` 必须给全部不同输出；生成后逐项核实际根名和输出名，不能静默删根或漏输出。
+`input_names` is the module positional argument order and must exactly cover all roots. Python callers may omit it and use their own dictionary insertion order; serialized JSON flows should pass this list explicitly. The CLI must use `--input-names` and not rely on JSON object key order. `output_names` must provide all distinct outputs; after generation, original root names and output names are verified item by item, and roots cannot be silently deleted or outputs omitted.
 
 ```sh
 archexplorer export-torch module.pt --inputs TORCH-INPUTS.json \
@@ -14,13 +14,13 @@ archexplorer export-torch module.pt --inputs TORCH-INPUTS.json \
   --dynamic-axes AXES.json --output-dir exported
 ```
 
-AXES.json 形如 `{"X":{"0":"batch"},"R":{"0":"batch"},"Y":{"0":"batch"},"hidden":{"0":"batch"}}`。动态轴必须在实际端口秩内；输入轴先检查，导出后再核对所有声明端口的符号确已保留。INPUT-SHAPES.json 保存每个原根的完整实际 shape，导入时按原根名特化。符号不能解除模型的位置表、词表或空间尺寸约束。external_data 由官方 ONNX save_model 把真实初始化权重放入 weights.bin，location 相对 model.onnx；Constant 节点保留导出器原表示。
+AXES.json has the form `{"X":{"0":"batch"},"R":{"0":"batch"},"Y":{"0":"batch"},"hidden":{"0":"batch"}}`. Dynamic axes must be within the actual port rank; input axes are checked first, and after export it is verified that the symbols of all declared ports are indeed preserved. INPUT-SHAPES.json saves the complete actual shape of each original root and specializes by original root name on import. Symbols cannot lift the model's position table, vocabulary, or spatial size constraints. external_data uses the official ONNX save_model to place real initialization weights into weights.bin, with location relative to model.onnx; Constant nodes retain the exporter's original representation.
 
-输出目录必须新建，包含 model.onnx、可选 weights.bin、INPUTS.json、INPUT-SHAPES.json、TORCH-INPUTS.json、OPERATORS.json 和 EXPORT.json。OPERATORS 列实际 node/domain/opset/属性/原名和 initializer dtype/shape。EXPORT 保存固定导出选项、依赖版本及文件摘要，导出失败后也在 finally 保存原类型和诊断。它记录输入，不含数值答案。
+The output directory must be newly created and contains model.onnx, optional weights.bin, INPUTS.json, INPUT-SHAPES.json, TORCH-INPUTS.json, OPERATORS.json, and EXPORT.json. OPERATORS lists actual node/domain/opset/attributes/original names and initializer dtype/shape. EXPORT saves fixed export options, dependency versions, and file digests; after an export failure, it also saves the original type and diagnostics in a finally block. It records inputs and does not contain numerical answers.
 
-根类型、形状和输入顺序等调用边界在创建输出目录前检查；此时的拒绝由调用者保存原异常或CLI日志，尚无EXPORT文件。已经进入导出阶段的失败由EXPORT.json记录。
+Call boundaries such as root types, shapes, and input order are checked before creating the output directory; rejections at this point are saved by the caller as the original exception or CLI log, and no EXPORT file exists yet. Failures that have entered the export phase are recorded by EXPORT.json.
 
-`import_export(directory, *, name='onnx', **import_options)` 先公共 onnx_preflight，再加载数值根，交唯一正式 ONNX importer；可用 `resource_budget` 传入完整策略。省略策略保持旧小包表示。具体支持域、预估资源、存储舍入和 lowering 由 workload 的接口决定。之后复用 `onnx_scene`、`onnx_search_config`、`onnx_agent_config`、`layout_candidates` 和普通 Env/CLI：
+`import_export(directory, *, name='onnx', **import_options)` first runs the common onnx_preflight, then loads numerical roots and hands them to the sole official ONNX importer; a complete strategy can be passed via `resource_budget`. Omitting the strategy retains the old small-package representation. The specific supported domains, estimated resources, storage rounding, and lowering are determined by the workload's interface. Afterwards, `onnx_scene`, `onnx_search_config`, `onnx_agent_config`, `layout_candidates`, and the ordinary Env/CLI are reused:
 
 ```sh
 python emit.py exported --output inputs --max-evaluations 12
@@ -33,7 +33,7 @@ archexplorer evaluate BEST.json --output READONLY.json
 archexplorer rerun BEST.json --work-dir new-run --output RERUN.json
 ```
 
-两层视觉/文本双塔超过 importer 默认256节点限额。对本目录小型模型，先将以下显式策略保存为 SMALL-BUDGET.json；它声明预检和执行资源上限，随自包含来源保存，其他模型应依据自己的资源约束选择。
+The two-layer vision/text dual tower exceeds the importer's default 256-node limit. For the small models in this directory, first save the following explicit strategy as SMALL-BUDGET.json; it declares preflight and execution resource limits and is saved with the self-contained source. Other models should choose according to their own resource constraints.
 
 ```json
 {
@@ -53,12 +53,12 @@ archexplorer rerun BEST.json --work-dir new-run --output RERUN.json
 }
 ```
 
-运行 `python emit.py exported --output inputs --candidate 1 --layout views --max-evaluations 3 --resource-budget SMALL-BUDGET.json` 可限制一组放置与布局。`candidate=None, layout=None` 的默认值覆盖两组放置和两布局；限制条件只过滤公共配置，不改变 Graph、数值或成本。SCENE 与单次 Agent 使用所选组合，未指定时用0/materialized。max_evaluations 始终是上限，并受所选配置原预算限制；3单位允许一次基线、一次容量拒绝与一次带宽提案，实际是否执行及成功以账本为准。省略 resource_budget 保留原默认上限；拒绝原文必须留存，不能将超额调用记为成功。
+Run `python emit.py exported --output inputs --candidate 1 --layout views --max-evaluations 3 --resource-budget SMALL-BUDGET.json` to restrict a set of placements and layouts. The defaults `candidate=None, layout=None` cover two placement groups and two layouts; restrictions only filter public configurations and do not change the Graph, values, or cost. SCENE and a single Agent use the selected combination, defaulting to 0/materialized when unspecified. max_evaluations is always an upper bound and is also limited by the original budget of the selected configuration; 3 units allow one baseline, one capacity rejection, and one bandwidth proposal; whether they actually execute and succeed is determined by the ledger. Omitting resource_budget retains the original default limit; rejection text must be preserved, and over-limit calls cannot be recorded as successes.
 
-预算是评价单位上限，不代表不同候选的数量。默认配置包含两组逐原算子放置/分块与两布局，并探索明确的容量和带宽；失败也按原 Env 合同记账。保存的 winner 携带全量有效规则、来源、输入、shape、预算、adapter/implementation 和编译身份。fresh 读取的纯解析/编译校验与产物 prepare、engine、solver、写入分别核查；显式 rerun 在新目录真实执行并另计费。
+The budget is an upper limit on evaluation units and does not represent the number of different candidates. The default configuration includes two per-original-operator placement/tiling groups and two layouts, and explores explicit capacity and bandwidth; failures are also accounted for according to the original Env contract. The saved winner carries all valid rules, sources, inputs, shapes, budget, adapter/implementation, and compilation identity. Fresh reads perform pure parsing/compilation validation and separately verify artifact preparation, engine, solver, and writing; explicit rerun actually executes in a new directory and is billed separately.
 
-框架 forward、官方 ONNX evaluator、独立 CPU 参考、映射 CPU、组件计时、安装验收分别留证。BF16 官方 evaluator 的执行完成不等于数值通过；原始差异或不支持诊断应保留，不能将错误结果当 oracle。原始私有答案、论文测量和硬件标定不进入例子或公开导出。
+Framework forward, official ONNX evaluator, independent CPU reference, mapped CPU, component timing, and installation acceptance each retain evidence. Completion of BF16 official evaluator execution does not mean numerical pass; original differences or unsupported diagnostics should be preserved, and incorrect results cannot be treated as an oracle. Original private answers, paper measurements, and hardware calibrations do not enter examples or public exports.
 
-`vision_language.py` 提供固定种子的实际视觉分类器与图文双塔。视觉输入为[2,3,4,6]，Conv patch为[2,3]，类标记/位置与两层完整块后接3类头；双塔另有 int64 tokens[3,4]、两层 causal 文本块、首个最大token的行选择、两投影/L2归一化和FP32 exp缩放，输出[2,3]与[3,2]。相同语义提供 FP32/FP16/BF16，精确维度与合成参数以 MODEL/原文件为准。小型完整结构不表示预训练准确率或论文规模。
+`vision_language.py` provides fixed-seed actual vision classifiers and image-text dual towers. The vision input is [2,3,4,6], Conv patch is [2,3], class token/position and two complete layers followed by a 3-class head; the dual tower additionally has int64 tokens[3,4], two causal text layers, row selection of the first maximum token, two projections/L2 normalization, and FP32 exp scaling, with outputs [2,3] and [3,2]. The same semantics are provided in FP32/FP16/BF16; exact dimensions and synthetic parameters are governed by the MODEL/original files. The small complete structure does not represent pretrained accuracy or paper scale.
 
-BF16 的 patch 在真实框架模块里显式转 FP32 做 Conv，再转回 BF16；ONNX opset17 的 [Conv 类型约束](https://onnx.ai/onnx/operators/onnx__Conv.html#conv-11)不允许直接 BF16 Conv。导出常量折叠可能使 patch 权重成为 FP32 initializer，消费方按实际文件计费；不能重写 protobuf dtype 或去掉必要 Cast。原生 BF16 导出被官方 checker 拒绝的诊断应保留，与显式路径的成功分列。
+The BF16 patch explicitly converts to FP32 in the real framework module for Conv, then converts back to BF16; ONNX opset17's [Conv type constraints](https://onnx.ai/onnx/operators/onnx__Conv.html#conv-11) do not allow direct BF16 Conv. Export constant folding may make patch weights FP32 initializers, and consumers are billed according to the actual file; protobuf dtypes cannot be rewritten and necessary Casts cannot be removed. Diagnostics of native BF16 export rejected by the official checker should be preserved and listed separately from the success of the explicit path.
